@@ -9,6 +9,7 @@ on:
     types: [opened, synchronize, reopened]
   push:
     branches: ["master"]
+  workflow_dispatch:
 
 permissions:
   contents: read
