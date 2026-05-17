@@ -5,14 +5,14 @@
 		/// <summary>
 		/// The underlying database engine
 		/// </summary>
-		public static DatabaseTypes DatabaseType = DatabaseTypes.SqlServer;
+		public static DatabaseTypes DatabaseType = DatabaseTypes.Postgres;
 
 		/// <summary>
 		/// The underlying database engine for the document database (does not support SqlServer)
 		/// </summary>
-		public static DatabaseTypes DocDatabaseType = DatabaseTypes.MongoDb;
+		public static DatabaseTypes DocDatabaseType = DatabaseTypes.Postgres;
 
-		public static string ConnectionString = "Server=rgdevserver;Database=Resgrid;User Id=resgrid_app;Password=resgrid123;MultipleActiveResultSets=True;TrustServerCertificate=True;";
+		public static string ConnectionString = "";
 
 		/// <summary>
 		/// Connection string for the core relational Resgrid database

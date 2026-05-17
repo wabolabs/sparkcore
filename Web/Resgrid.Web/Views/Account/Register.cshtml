@@ -2,7 +2,7 @@
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<Resgrid.Localization.Account.Login> localizer
 @{
-    ViewData["Title"] = "Resgrid | " + @localizer["RegisterHeader"];
+    ViewData["Title"] = "SparkOps Core | " + @localizer["RegisterHeader"];
     Layout = null;
 }
 
@@ -67,7 +67,7 @@
                 </div>
 
                 <div class='alert alert-info'>
-                    @localizer["SignUpTerms1"] Resgrid's <a href="@Resgrid.Config.UrlsConfig.TermsOfUseUrl" target="_blank">@localizer["TermsOfUse"]</a> &
+                    @localizer["SignUpTerms1"] SparkOps Core's <a href="@Resgrid.Config.UrlsConfig.TermsOfUseUrl" target="_blank">@localizer["TermsOfUse"]</a> &
                     <a href="@Resgrid.Config.UrlsConfig.PrivacyPolicyUrl" target="_blank">@localizer["PrivacyPolicy"]</a>
                 </div>
 
@@ -155,10 +155,9 @@
         <hr />
         <div class="row">
             <div class="col-md-3">
-                Resgrid, LLC.
+                SparkOps Core &mdash; Based on <a href="https://github.com/Resgrid/Core" target="_blank">Resgrid</a> (Apache 2.0)
             </div>
             <div class="col-md-6 text-center">
-                Made with <i class="fa fa-heart text-danger"></i> in Lake Tahoe
             </div>
             <div class="col-md-3 text-right">
                 <small>© @DateTime.Now.Year</small>

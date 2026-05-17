@@ -11,13 +11,9 @@
 		public static string PrintNodeBaseUrl = "https://api.printnode.com";
 
 		/// <summary>
-		/// The NReco Pdf License Owner
+		/// Path to the Chromium/Chrome executable for PuppeteerSharp. Leave empty to use PuppeteerSharp's bundled revision.
+		/// In Docker, set to /usr/bin/chromium or /usr/bin/google-chrome.
 		/// </summary>
-		public static string NRecoPdfOwner = "";
-
-		/// <summary>
-		/// The NReco Pdf License Key
-		/// </summary>
-		public static string NRecoPdfKey = "";
+		public static string ChromiumExecutablePath = "";
 	}
 }

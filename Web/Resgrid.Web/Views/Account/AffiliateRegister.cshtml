@@ -6,7 +6,7 @@
 <html lang='en'>
 <head>
 	<meta content='text/html; charset=utf-8' http-equiv='Content-Type' />
-	<title>Resgrid | Affiliate Registration</title>
+	<title>SparkOps Core | Affiliate Registration</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="stylesheet" href="@Url.Content("~/Content/newinternal/css/bootstrap.min.css")" />
 	<link rel="stylesheet" href="@Url.Content("~/Content/newinternal/css/font-awesome.css")" />
@@ -33,7 +33,7 @@
 							<div id="register-wizard-1" class="step">
 								<h4>Create your affiliate account</h4>
 								<section>
-									<p>Fill out the fields below to create your affiliate account. If you already have an account for Resgrid (i.e. for your Department) you will need to use a different Username and Email address for your Affiliate Account.</p>
+									<p>Fill out the fields below to create your affiliate account. If you already have an account for SparkOps Core (i.e. for your Department) you will need to use a different Username and Email address for your Affiliate Account.</p>
 									<div class="input-group">
 										<span class="input-group-addon"><i class="icon-info-sign"></i></span>@Html.TextBoxFor(m => m.FullName, new { id = "user_full_name", @class = "form-control", autofocus = "autofocus", placeholder = "Your Name (First & Last)" })
 									</div>
@@ -66,7 +66,7 @@
 											<span class="input-group-addon"><i class="icon-lock"></i></span>@Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control", placeholder = "Confirm Password" })
 										</div>
 										<div class='alert alert-info'>
-											By signing up, you accept Resgrid's <a href="@Url.Action("Terms", "Public", new { area = "" })" target="_blank">
+											By signing up, you accept SparkOps Core's <a href="@Url.Action("Terms", "Public", new { area = "" })" target="_blank">
 												terms of use
 											</a>, <a href="@Url.Action("Privacy", "Public", new { area = "" })" target="_blank">
 												privacy

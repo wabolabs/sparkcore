@@ -1,6 +1,6 @@
 {
-  "name": "Resgrid Web",
-  "short_name": "RGWeb",
+  "name": "SparkOps Core",
+  "short_name": "SOCore",
   "icons": [
     {
       "src": "/images/android-chrome-192x192.png",

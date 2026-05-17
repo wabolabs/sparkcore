@@ -220,11 +220,11 @@ namespace Resgrid.Web.ServicesCore
 
 					new OpenApiInfo
 					{
-						Title = "Resgrid API",
+						Title = "SparkOps Core API",
 						Version = "v4",
-						Description = "The Resgrid Computer Aided Dispatch (CAD) API reference. Documentation: https://resgrid-core.readthedocs.io/en/latest/api/index.html",
-						Contact = new OpenApiContact() { Email = "team@resgrid.com", Name = "Resgrid Team", Url = new Uri("https://resgrid.com") },
-						TermsOfService = new Uri("https://resgrid.com/Public/Terms")
+						Description = "The SparkOps Core Computer Aided Dispatch (CAD) API reference.",
+						Contact = new OpenApiContact() { Name = "SparkOps Core" },
+						TermsOfService = null
 					}
 				);
 
@@ -709,7 +709,7 @@ namespace Resgrid.Web.ServicesCore
 			app.UseSwaggerUI(c =>
 			{
 				//c.SwaggerEndpoint($"/swagger/v3/swagger.json", "Resgrid API V3");
-				c.SwaggerEndpoint($"/swagger/v4/swagger.json", "Resgrid API V4");
+				c.SwaggerEndpoint($"/swagger/v4/swagger.json", "SparkOps Core API V4");
 
 				c.RoutePrefix = string.Empty;
 			});
