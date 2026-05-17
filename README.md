@@ -1,96 +1,164 @@
-<p align="center">
-  <a href="https://resgrid.com/">
-    <img src="https://raw.githubusercontent.com/resgrid/core/master/misc/images/Resgrid_TextLogo.png" alt="Resgrid logo">
-  </a>
-</p>
+# SparkOps Core
 
-<h3 align="center">Resgrid Core</h3>
+**Self-hosted computer-aided dispatch (CAD), resource management, and logistics for emergency services.**
 
-<p align="center">
-  Complete and open source computer aided dispatch, management and logistics for first responders, disaster response, emergency management and companies
-  <br>
-  <a href="https://docs.resgrid.com/"><strong>View Resgrid docs</strong></a>
-  <br>
-  <br>
-  <a href="https://github.com/Resgrid/Core/issues/new?template=bug.md">Report bug</a>
-  ·
-  <a href="https://github.com/Resgrid/Core/issues/new?template=feature.md&labels=feature">Request feature</a>
-  ·
-  <a href="https://blog.resgrid.com/">Blog</a>
-</p>
+SparkOps Core is a community-maintained fork of [Resgrid Core](https://github.com/Resgrid/Core) (Apache 2.0), hardened for fully self-hosted, open-source deployments. All cloud-service dependencies are replaced with open-source alternatives; no vendor account or paid API key is required to run a production instance.
+
+[![CI/CD](https://github.com/wabolabs/sparkcore/actions/workflows/dotnet.yml/badge.svg)](https://github.com/wabolabs/sparkcore/actions/workflows/dotnet.yml)
+[![License](https://img.shields.io/github/license/wabolabs/sparkcore.svg)](LICENSE)
+
+---
 
 ## Table of Contents
 
 - [Features](#features)
-- [Hosted](#hosted)
-- [Applications](#applications)
-- [Initiatives](#initiatives)
-- [Status](#status)
-- [Copyright and license](#copyright-and-license)
+- [Container images](#container-images)
+- [Quick start](#quick-start)
+- [Configuration](#configuration)
+- [Building from source](#building-from-source)
+- [Architecture](#architecture)
+- [Contributing](#contributing)
+- [Attribution and license](#attribution-and-license)
+
+---
 
 ## Features
 
-- **Personnel Management** Define personnel, contact information, details, certification, roles, status and availability for all personnel
-- **Unit Support** Support for apparatuses and groups of personnel working as a single unit (i.e. a USAR team) with AVL, accountability and logging
-- **Groups and Locations** Create groups and locations and assign personnel or units underneath for management of large or disperse organizations 
-- **Computer Aided Dispatch** Create Calls\Incidents and dispatch personnel, units, roles or groups to respond to those incidents both manual and automatic dispatches are supported
-- **Messaging** Built in message system to allow for targeted and dynamic communications to personnel
-- **Chat** Embedded P2P, Groups, Dispatch to Unit and Command chat system to enable very quick text based communications
-- **Duty Shift System** Create both Assigned Shifts and Signup Shifts to manage a static or dynamic workforce, switch swapping and trading support with attendance validation
-- **Learning Management** Design Trainings with text based materials, attach documents or presentations or link to external videos and assign questions to validate understanding of material
-- **Run Logs and Logging** Record actions of a call, training and meetings to keep tract of actions and events, hours, personnel and units involved
-- **Reporting** Generate reports for run logs, calls, training, meetings and more. Ability to use Reporting to create exports to integrate with 3rd party systems
-- **Calendar System** Create calendar entries and setup RSVP style events to keep personnel engaged and informed about activities and events
-- **Inventory Management** Track any kind of inventory both perishable (like medicine) and durable (like hand tools) equipped on apparatus, issued to personnel or stored at locations
-- **Document Storage** Upload and serve documents at a department or group level to members of your organization allowing a centralized place to serve documents from
-- **Notifications Service** Flexible notification system to alert of low personnel role or unit availability, staffing or status changes or any other system generated event
-- **Department Linking** Create powerful department links to allow for multiple independent organizations (i.e. mutual aid agreements or centralized dispatch center) to cooperate
-- **Mobile Apps** Apps available on Google Play and Apple App Store that can work with any standard installation. For Personnel, Units, Stations and Commanders.
-- **API** Included API with information about calls allow for easy extension and interaction without having to change code in the Resgrid Core codebase
+- **Personnel management** — contacts, certifications, roles, status, and availability
+- **Unit support** — apparatus and team tracking with AVL, accountability, and logging
+- **Groups and locations** — hierarchical organization for large or dispersed agencies
+- **Computer-aided dispatch** — manual and automatic call creation and unit dispatch
+- **Messaging and chat** — P2P, group, and command channels
+- **Duty shift system** — assigned and signup shifts with swap/trade and attendance validation
+- **Learning management** — training materials, documents, video links, and quizzes
+- **Run logs and reporting** — call, training, and meeting reports; CSV export
+- **Calendar** — RSVP events and activity scheduling
+- **Inventory management** — perishable and durable inventory at apparatus, personnel, and location level
+- **Document storage** — department- and group-scoped document hosting
+- **Notification service** — alerts for staffing, availability, and status changes
+- **Department linking** — mutual-aid and multi-agency cooperation
+- **REST API** — full API for integration and mobile app support
 
+---
 
-![Resgrid Main Screen](https://raw.githubusercontent.com/resgrid/core/master/misc/images/ResgridIntro.gif)
+## Container images
 
-## Hosted
+Images are published to the GitHub Container Registry on every push to `master`:
 
-If you don't want to run your own instance of Resgrid, we provide a hosted version with both free and paid plans. The same code base provided here runs
-the hosted version as well and we update the system every few weeks with the latest features and fixes.
+| Service | Image |
+|---|---|
+| Web (main UI) | `ghcr.io/wabolabs/sparkcore/web:latest` |
+| API | `ghcr.io/wabolabs/sparkcore/api:latest` |
+| Eventing | `ghcr.io/wabolabs/sparkcore/eventing:latest` |
+| MCP | `ghcr.io/wabolabs/sparkcore/mcp:latest` |
+| TTS | `ghcr.io/wabolabs/sparkcore/tts:latest` |
+| Worker | `ghcr.io/wabolabs/sparkcore/worker:latest` |
 
-[Sign up for your free Resgrid Account Today!](https://resgrid.com)
+Versioned tags follow `1.0.<run_number>` semver. `latest` always points to the most recent successful build.
 
-## Applications
+---
 
-Below are the repositories for the applications built utilizing the [Resgrid API](https://api.resgrid.com).
+## Quick start
 
-###### [BigBoard](https://github.com/Resgrid/BigBoard)
-The Resgrid BigBoard is a dashboard system intended to be used in stations or centralized locations to allow for personnel to see the status of the system at a glance. The BigBoard can display Personnel Statuses, Staffing and ETAs, Unit Statuses, Call and Call Information, a map of all activity, and current weather.
+> Prerequisites: Docker Compose v2, PostgreSQL 15+, RabbitMQ 3.12+, Redis 7+.
 
-![BigBoard](https://raw.githubusercontent.com/resgrid/core/master/misc/images/BigBoard.png)
+1. Pull the compose file and create a config:
 
-###### [Relay](https://github.com/Resgrid/Relay)
-The Resgrid Relay is a console based application to monitor an audio input, for example from a Scanner, to listen for Tone Frequencies and capture audio for a selected amount of time. Once complete Resgrid Relay will create a call in the Resgrid system and dispatch the groups, or department, associated with the tones. This allows for standing up Resgrid in environments where you cannot modify a dispatch system or a shared dispatch center.
+   ```bash
+   curl -O https://raw.githubusercontent.com/wabolabs/sparkcore/master/Docker/docker-compose.yml
+   cp ResgridConfig.example.json ResgridConfig.json
+   # edit ResgridConfig.json — set database, Redis, and RabbitMQ connection strings
+   ```
 
-![Relay](https://raw.githubusercontent.com/resgrid/core/master/misc/images/Relay.png)
+2. Start the stack:
 
-###### [Dispatch](https://github.com/Resgrid/Dispatch)
-The Resgrid is web application that allows Dispatchers a single UI to create calls, set unit statuses, modify and close calls, and monitor activities without ever leaving that single screen. The Dispatch application is intended to streamline live dispatcher operations and avoid excess page navigations and manual page refreshing to get current statuses.
+   ```bash
+   docker compose up -d
+   ```
 
-![Dispatch](https://raw.githubusercontent.com/resgrid/core/master/misc/images/Dispatch.png)
+3. Open `http://localhost` in your browser.
 
-## Status
+### PDF generation (worker image)
 
-[![CodeFactor](https://www.codefactor.io/repository/github/resgrid/core/badge)](https://www.codefactor.io/repository/github/resgrid/core)
-[![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
-<a href="https://discord.gg/YDs7tHB"><img src="https://img.shields.io/badge/discord-join-7289DA.svg?logo=discord&longCache=true&style=flat" /></a>
-<a href="https://github.com/Resgrid/Core/blob/master/LICENSE"><img src="https://img.shields.io/github/license/resgrid/core.svg" alt="License" /></a>
+The worker container has Chromium installed at `/usr/bin/chromium`. Set the config key so PuppeteerSharp can find it:
 
-## Priority Support
+```json
+{ "PrintConfig.ChromiumExecutablePath": "/usr/bin/chromium" }
+```
 
-We provide support for all of Resgrid's open-source products via GitHub issues without charge. Me make our best effort to address and close issues in a timely fashion. If your organization needs priority support for critical issues please take a look at our Priority Support packages on our Open-Source page.
+Or pass it as an environment variable using the `RESGRID:PrintConfig:ChromiumExecutablePath` key.
 
-[View Paid Support Options](https://resgrid.com/Home/OpenSource)
+---
 
+## Configuration
 
-## Copyright and License
+Configuration is loaded from `ResgridConfig.json` (placed next to the executable) or environment variables.
 
-Code and documentation copyright 2021 the [Resgrid Core Authors](https://github.com/Resgrid/Core/graphs/contributors) and [Resgrid, LLC.](https://resgrid.com) Code released under the [Apache License 2.0](https://github.com/Resgrid/Core/blob/master/LICENSE).
+- **JSON key format:** `"ClassName.FieldName": "value"` — e.g., `"DataConfig.ConnectionString": "Host=..."`
+- **Environment variable format:** `RESGRID:ClassName:FieldName` — e.g., `RESGRID:DataConfig:ConnectionString`
+
+Key config classes:
+
+| Class | Purpose |
+|---|---|
+| `DataConfig` | PostgreSQL connection strings |
+| `CacheConfig` | Redis connection string |
+| `ServiceBusConfig` | RabbitMQ connection string |
+| `SystemBehaviorConfig` | Environment name, feature flags |
+| `EmailConfig` | SMTP settings |
+| `PrintConfig` | Chromium path for PDF generation |
+
+---
+
+## Building from source
+
+Requires [.NET 9 SDK](https://dotnet.microsoft.com/download).
+
+```bash
+git clone https://github.com/wabolabs/sparkcore.git
+cd sparkcore
+dotnet restore
+dotnet build Resgrid.sln
+dotnet test --configuration Release
+```
+
+Build Docker images locally:
+
+```bash
+docker build -f Web/Resgrid.Web/Dockerfile -t sparkcore/web .
+docker build -f Workers/Resgrid.Workers.Console/Dockerfile -t sparkcore/worker .
+```
+
+---
+
+## Architecture
+
+SparkOps Core is a .NET 9 monolith split across 30+ projects in a layered architecture:
+
+```
+Config → Model → Services → Repositories / Providers → Web / Workers
+```
+
+- **Config** (`Core/Resgrid.Config/`) — static config classes, no external dependencies
+- **Model** (`Core/Resgrid.Model/`) — entities, enums, service/repository interfaces
+- **Services** (`Core/Resgrid.Services/`) — business logic
+- **Repositories** (`Repositories/`) — PostgreSQL via Dapper
+- **Providers** (`Providers/`) — Redis, RabbitMQ, email, PDF, geolocation, …
+- **Web** (`Web/`) — ASP.NET Core MVC + REST API + supporting endpoints
+- **Workers** (`Workers/`) — background job processing
+
+Dependency injection uses [Autofac](https://autofac.org/) with module-based registration. See [`CLAUDE.md`](CLAUDE.md) for a detailed developer reference.
+
+---
+
+## Contributing
+
+See [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md).
+
+---
+
+## Attribution and license
+
+SparkOps Core is based on **[Resgrid Core](https://github.com/Resgrid/Core)**, copyright 2021 the Resgrid Core Authors and [Resgrid, LLC](https://resgrid.com). Used under the [Apache License 2.0](LICENSE).
+
+All modifications in this repository are copyright their respective contributors and are also released under the [Apache License 2.0](LICENSE).

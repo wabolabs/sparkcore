@@ -1,13 +1,24 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
-ARG BUILD_VERSION=3.5.0
+ARG BUILD_VERSION=1.0.0
 
-#FROM mcr.microsoft.com/dotnet/runtime:9.0.3-noble-amd64 AS base
-FROM dhi.io/dotnet:9.0.16-debian13@sha256:4797903e46b475875f4a402aa6f42a1dcc78cfe67d217f9f5f49e358b60d47a3 AS base
+FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
 ARG BUILD_VERSION
 WORKDIR /app
+# Install Chromium for PuppeteerSharp PDF generation.
+# Set PrintConfig.ChromiumExecutablePath=/usr/bin/chromium via env or ResgridConfig.json.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        chromium \
+        fonts-liberation \
+        fonts-dejavu-core \
+        libgbm1 \
+        libnss3 \
+        libatk-bridge2.0-0 \
+        libgtk-3-0 \
+        libasound2 \
+    && rm -rf /var/lib/apt/lists/*
 
-#FROM mcr.microsoft.com/dotnet/sdk:9.0.202-noble-amd64 AS build
-FROM dhi.io/dotnet:9.0.314-sdk-debian13@sha256:a3acd51de0af79878e26292b3053aab513c6ca4476ddb2f9f11adb9c04aa7c89 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_VERSION
 WORKDIR /src
 
@@ -40,41 +51,8 @@ RUN dotnet publish "Resgrid.Workers.Console.csproj" -c Release -o /app/publish -
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /app/publish/wait
 RUN chmod +x /app/publish/wait
 
-## Install wkhtmltopdf and capture its runtime libraries
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        wget \
-        fontconfig \
-        fonts-dejavu-core \
-        init-system-helpers \
-        libfontconfig1 \
-        libfreetype6 \
-        libjpeg62-turbo \
-        libpng16-16 \
-        libssl3 \
-        libx11-6 \
-        libxext6 \
-        libxrender1 \
-        zlib1g \
-    && wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
-    && dpkg -i wkhtmltox_0.12.6.1-3.bookworm_amd64.deb || apt-get install -fy \
-    && rm -f wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
-    && mkdir -p /tmp/wkdeps \
-    && ldd /usr/local/bin/wkhtmltopdf | awk '/=>/ {print $3}' | while read lib; do cp "$lib" /tmp/wkdeps/; done \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
 FROM base AS final
 WORKDIR /app
-
-## Copy wkhtmltopdf binary + runtime libraries from publish stage
-COPY --from=publish /usr/local/bin/wkhtmltopdf /usr/local/bin/wkhtmltopdf
-COPY --from=publish /tmp/wkdeps/ /usr/local/lib/wkhtmltopdf/
-COPY --from=publish /etc/fonts/ /etc/fonts/
-COPY --from=publish /usr/share/fonts/ /usr/share/fonts/
-
-ENV LD_LIBRARY_PATH="/usr/local/lib/wkhtmltopdf"
-
 COPY --from=publish /app/publish .
-
 ENTRYPOINT ["./wait"]
 CMD ["dotnet", "Resgrid.Workers.Console.dll"]

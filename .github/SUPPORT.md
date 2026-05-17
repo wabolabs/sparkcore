@@ -1,11 +1,13 @@
-### Bug reports
+# Support
 
-See the [contributing guidelines](CONTRIBUTING.md) for sharing bug reports.
+## Bug reports
 
-### Feature requests
+Use the [issue tracker](https://github.com/wabolabs/sparkcore/issues). See [CONTRIBUTING.md](CONTRIBUTING.md) for what makes a good report.
 
-See the [contributing guidelines](CONTRIBUTING.md) for asking for a new feature.
+## Feature requests
 
-### Deployment\Installation support
+Open an issue and describe the use case. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Resgrid doesn't directly provide support for on-premise installations or custom deployments though Github, unless there is a bug then please use the Bug reports. You can reach out to shawn@resgrid.com to inquire about engaging Resgrid to support your on-premise installation or custom deployment, or ask about our managed offering.
+## Deployment and installation support
+
+SparkOps Core does not provide direct support for on-premise deployments via GitHub issues. If you encounter a reproducible bug during deployment, open an issue with logs and configuration details (redact secrets).
