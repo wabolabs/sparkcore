@@ -183,7 +183,7 @@
     <None Remove="$(SpaRoot)**" />
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
   </ItemGroup>
-  <Target Name="BuildClientApps" AfterTargets="BeforeBuild">
+  <Target Name="BuildClientApps" AfterTargets="BeforeBuild" Condition="'$(SKIP_NPM_BUILD)' != '1'">
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
     <Exec WorkingDirectory="$(SpaRoot)" Condition="'$(Configuration)' == 'Debug'" Command="npm run build -- --mode development --outDir ./dist/core --emptyOutDir" />
     <Exec WorkingDirectory="$(SpaRoot)" Condition="'$(Configuration)' != 'Debug'" Command="npm run build -- --mode production --outDir ./dist/core --emptyOutDir" />
