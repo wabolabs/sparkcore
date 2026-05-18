@@ -13,7 +13,6 @@ using Resgrid.Model.Services;
 using Resgrid.Providers.Claims;
 using Resgrid.Web.Areas.User.Models.Subscription;
 using Resgrid.Web.Options;
-using Stripe;
 using Microsoft.AspNetCore.Authorization;
 using Resgrid.Framework;
 using Resgrid.Model.Events;
@@ -345,42 +344,8 @@ namespace Resgrid.Web.Areas.User.Controllers
 
 			try
 			{
-				var user = _usersService.GetUserById(UserId);
-				var department = await _departmentsService.GetDepartmentByIdAsync(DepartmentId);
-				var stripeCustomerId = await _departmentSettingsService.GetStripeCustomerIdForDepartmentAsync(DepartmentId);
-
-				var cardToken = form["stripeToken"];
-
-				var cardService = new CardService();
-				var customerService = new CustomerService();
-
-				var updateCardOptions = new CardCreateOptions();
-				updateCardOptions.Source = new AnyOf<string, CardCreateNestedOptions>(cardToken);
-
-				Card stripeCard = await cardService.CreateAsync(stripeCustomerId, updateCardOptions, cancellationToken: cancellationToken);
-
-				var customerOptions = new CustomerUpdateOptions
-				{
-					Email = user.Email,
-					Description = department.Name,
-					DefaultSource = stripeCard.Id
-				};
-
-				Customer stripeCustomer = await customerService.UpdateAsync(stripeCustomerId, customerOptions, cancellationToken: cancellationToken);
-
-				var auditEvent = new AuditEvent();
-				auditEvent.Before = updateCardOptions.CloneJsonToString();
-				auditEvent.DepartmentId = DepartmentId;
-				auditEvent.UserId = UserId;
-				auditEvent.Type = AuditLogTypes.SubscriptionBillingInfoUpdated;
-				auditEvent.After = stripeCustomer.CloneJsonToString();
-				auditEvent.Successful = true;
-				auditEvent.IpAddress = IpAddressHelper.GetRequestIP(Request, true);
-				auditEvent.ServerName = Environment.MachineName;
-				auditEvent.UserAgent = $"{Request.Headers["User-Agent"]} {Request.Headers["Accept-Language"]}";
-				_eventAggregator.SendMessage<AuditEvent>(auditEvent);
-
-				return RedirectToAction("BillingInfoUpdateSuccess", "Subscription", new { Area = "User" });
+				// Payment processing not available in SparkOps Core self-hosted.
+				return RedirectToAction("Index", "Subscription", new { Area = "User" });
 			}
 			catch (Exception ex)
 			{
@@ -411,22 +376,8 @@ namespace Resgrid.Web.Areas.User.Controllers
 		[Authorize(Policy = ResgridResources.Department_Update)]
 		public async Task<IActionResult> ValidateCoupon(string couponCode)
 		{
-			var service = new CouponService();
-			Coupon coupon = null;
-
-			try
-			{
-				if (!String.IsNullOrWhiteSpace(couponCode))
-					coupon = await service.GetAsync(couponCode.Trim().ToUpper());
-			}
-			catch
-			{
-			}
-
-			if (coupon == null || (coupon.RedeemBy.HasValue && coupon.RedeemBy.Value < DateTime.UtcNow))
-				return Content("Invalid");
-
-			return Content("Valid");
+			// Coupons not supported in SparkOps Core self-hosted.
+			return Content("Invalid");
 		}
 
 		[HttpGet]
@@ -507,59 +458,9 @@ namespace Resgrid.Web.Areas.User.Controllers
 						return RedirectToAction("CancelFailure", "Subscription", new { Area = "User" });
 					}
 				}
-				else if (payment.Method == (int)PaymentMethods.Stripe)
+				else
 				{
-					var stripeCustomerId = await _departmentSettingsService.GetStripeCustomerIdForDepartmentAsync(DepartmentId);
-
-					if (String.IsNullOrWhiteSpace(stripeCustomerId))
-					{
-						var user = _usersService.GetUserById(UserId);
-						var cusService = new CustomerService();
-						var options = new CustomerListOptions
-						{
-							Email = user.Email
-						};
-
-						var customerList = await cusService.ListAsync(options, cancellationToken: cancellationToken);
-
-						if (customerList != null && customerList.Any())
-							stripeCustomerId = customerList.First().Id;
-					}
-
-					if (!String.IsNullOrWhiteSpace(stripeCustomerId))
-					{
-						var subscriptionService = new SubscriptionService();
-						var subs = await subscriptionService.ListAsync(new SubscriptionListOptions { Customer = stripeCustomerId }, cancellationToken: cancellationToken);
-						Subscription subscription = subs.First(sub => !sub.EndedAt.HasValue);
-
-						var cancelledSub = await subscriptionService.CancelAsync(subscription.Id, new SubscriptionCancelOptions { }, cancellationToken: cancellationToken);
-
-						var auditEvent = new AuditEvent();
-						auditEvent.Before = JsonConvert.SerializeObject(subscription);
-						auditEvent.DepartmentId = DepartmentId;
-						auditEvent.UserId = UserId;
-						auditEvent.Type = AuditLogTypes.SubscriptionCancelled;
-						auditEvent.After = JsonConvert.SerializeObject(cancelledSub);
-						auditEvent.Successful = true;
-						auditEvent.IpAddress = IpAddressHelper.GetRequestIP(Request, true);
-						auditEvent.ServerName = Environment.MachineName;
-						auditEvent.UserAgent = $"{Request.Headers["User-Agent"]} {Request.Headers["Accept-Language"]}";
-						_eventAggregator.SendMessage<AuditEvent>(auditEvent);
-
-						if (cancelledSub != null && cancelledSub.Status.Equals("canceled", StringComparison.InvariantCultureIgnoreCase))
-						{
-							return RedirectToAction("CancelSuccess", "Subscription", new { Area = "User" });
-						}
-						else
-						{
-							return RedirectToAction("CancelFailure", "Subscription", new { Area = "User" });
-						}
-					}
-					else
-					{
-						return RedirectToAction("CancelFailure", "Subscription", new { Area = "User" });
-					}
-
+					return RedirectToAction("CancelFailure", "Subscription", new { Area = "User" });
 				}
 			}
 
@@ -956,15 +857,6 @@ namespace Resgrid.Web.Areas.User.Controllers
 
 			ViewInvoiceView model = new ViewInvoiceView();
 			model.Payment = await _subscriptionsService.GetPaymentByIdAsync(paymentId);
-
-			if (!String.IsNullOrWhiteSpace(model.Payment.Data))
-			{
-				try
-				{
-					model.Charge = JsonConvert.DeserializeObject<Charge>(model.Payment.Data);
-				}
-				catch { }
-			}
 
 			return View(model);
 		}

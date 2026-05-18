@@ -53,7 +53,6 @@ using Resgrid.Web.Options;
 using Resgrid.WebCore.Middleware;
 using Sentry.Extensibility;
 using StackExchange.Redis;
-using Stripe;
 using IPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
 using Microsoft.Extensions.Http.Logging;
 using Resgrid.Web.Middleware;
@@ -438,7 +437,6 @@ namespace Resgrid.Web
 			});
 			//#endif
 
-			StripeConfiguration.ApiKey = Config.PaymentProviderConfig.GetStripeApiKey();
 
 			services.AddLocalization();
 

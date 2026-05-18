@@ -6,7 +6,6 @@ using Resgrid.Workers.Framework;
 using Autofac;
 using Resgrid.Model.Repositories;
 using Resgrid.Model;
-using Stripe.Identity;
 using System.Linq;
 using System.Text;
 using System.Threading;

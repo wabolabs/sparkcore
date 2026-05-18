@@ -25,7 +25,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Resgrid.Workers.Console.Tasks;
 using Serilog.Formatting.Json;
-using Stripe;
 using FluentMigrator.Runner;
 using Resgrid.Providers.Migrations.Migrations;
 using Resgrid.Model.Repositories;

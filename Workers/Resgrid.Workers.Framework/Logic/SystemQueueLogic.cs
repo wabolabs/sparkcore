@@ -3,7 +3,6 @@ using Autofac;
 using Resgrid.Framework;
 using Resgrid.Model;
 using Resgrid.Model.Services;
-using Stripe;
 using Resgrid.Model.Repositories;
 using Resgrid.Model.Events;
 using KellermanSoftware.CompareNetObjects;
@@ -14,7 +13,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Resgrid.Model.Providers;
 using Newtonsoft.Json;
-using Stripe.Checkout;
 
 namespace Resgrid.Workers.Framework.Logic
 {

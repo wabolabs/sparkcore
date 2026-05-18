@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using Resgrid.Config;
 using Resgrid.Providers.Claims;
 using Resgrid.Repositories.DataRepository.Stores;
-using Stripe;
 using System.Configuration;
 using System.IO;
 using System.Net;

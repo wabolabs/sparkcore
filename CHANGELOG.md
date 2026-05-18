@@ -50,5 +50,21 @@ Initial release of SparkOps Core — a self-hosted, fully open-source fork of
 
 ---
 
+## [Unreleased] — Phase 3: Payment removal
+
+- Removed `Stripe.net` NuGet package from all projects (Resgrid.Model, Resgrid.Services, Resgrid.Web, Resgrid.Web.Services).
+- Deleted all Stripe facade interfaces and implementations (`IStripeChargeServiceFacade`, `IStripeInvoiceServiceFacade`, `IStripeSubscriptionServiceFacade` and their implementations).
+- Deleted `IPaymentProviderService` and `PaymentProviderService` (Stripe webhook processing service).
+- `LimitsService` rewritten: all limit checks return `true`; all limit counts return `int.MaxValue`. No plan or billing API calls.
+- `SubscriptionsService` rewritten: always returns the free plan from the local database; all Stripe/Paddle methods are no-op stubs returning safe defaults. No external billing API calls.
+- `PaymentQueueLogic`: all payment event cases replaced with a log-and-discard no-op.
+- `StripeController` (API webhook endpoint): replaced with 200 OK stub to avoid Stripe delivery errors on misconfigured instances.
+- Removed `StripeConfiguration.ApiKey` initialization from `Web` and `Web.Services` startup.
+- Stubbed `UpdateBillingInfo`, `ValidateCoupon`, and the Stripe cancel path in `SubscriptionController`; removed Stripe charge data from `ViewInvoiceView` and the invoice Razor view.
+- Removed all stray `using Stripe;` / `using Stripe.Checkout;` directives across the codebase.
+- Added `System.Configuration.ConfigurationManager` package to `Resgrid.Web.Eventing` (pre-existing missing dependency exposed by the Stripe removal).
+
+---
+
 *Based on Resgrid Core — copyright 2021 the Resgrid Core Authors and Resgrid, LLC.*
 *Released under the Apache License 2.0.*

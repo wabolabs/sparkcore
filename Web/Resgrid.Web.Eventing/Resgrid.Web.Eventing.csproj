@@ -44,6 +44,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="9.0.3" />
     <PackageReference Include="Sentry.AspNetCore" Version="5.4.0" />
     <PackageReference Include="Sentry.Profiling" Version="5.4.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Resgrid.Config\Resgrid.Config.csproj" />

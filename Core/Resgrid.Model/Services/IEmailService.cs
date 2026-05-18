@@ -2,7 +2,6 @@
 using Resgrid.Model.Identity;
 using MimeKit;
 using Resgrid.Model.Events;
-using Stripe;
 using System;
 
 namespace Resgrid.Model.Services
@@ -139,15 +138,6 @@ namespace Resgrid.Model.Services
 		Task<bool> SendChargeFailedEmailAsync(Payment payment, Department department, Resgrid.Model.Plan plan);
 
 		/// <summary>
-		/// Sends the cancellation with refund email asynchronous.
-		/// </summary>
-		/// <param name="payment">The payment.</param>
-		/// <param name="charge">The charge.</param>
-		/// <param name="department">The department.</param>
-		/// <returns>Task&lt;System.Boolean&gt;.</returns>
-		Task<bool> SendCancellationWithRefundEmailAsync(Payment payment, Charge charge, Department department);
-
-		/// <summary>
 		/// Sends the user cancellation notification to team asynchronous.
 		/// </summary>
 		/// <param name="department">The department.</param>
@@ -157,14 +147,6 @@ namespace Resgrid.Model.Services
 		/// <returns>Task&lt;System.Boolean&gt;.</returns>
 		Task<bool> SendUserCancellationNotificationToTeamAsync(Department department, Payment payment, string userId,
 			string reason);
-
-		/// <summary>
-		/// Sends the refund issued notification to team.
-		/// </summary>
-		/// <param name="payment">The payment.</param>
-		/// <param name="charge">The charge.</param>
-		/// <param name="department">The department.</param>
-		Task<bool> SendRefundIssuedNotificationToTeam(Payment payment, Charge charge, Department department);
 
 		/// <summary>
 		/// Sends the upgrade payment receipt email.

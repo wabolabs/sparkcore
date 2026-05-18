@@ -12,7 +12,6 @@ using Resgrid.Config;
 using Resgrid.Providers.Claims;
 using Resgrid.Repositories.DataRepository.Stores;
 using Resgrid.Web.ServicesCore.Options;
-using Stripe;
 using System.Configuration;
 using System.IO;
 using System.Net;
@@ -431,7 +430,6 @@ namespace Resgrid.Web.ServicesCore
 			var configOptions = Configuration.GetSection("AppOptions").Get<AppOptions>();
 			services.Configure<AppOptions>(Configuration.GetSection("AppOptions"));
 
-			StripeConfiguration.ApiKey = Config.PaymentProviderConfig.IsTestMode ? PaymentProviderConfig.TestApiKey : PaymentProviderConfig.ProductionApiKey;
 
 			// Register the Identity services.
 			//services.AddIdentity<ApplicationUser, IdentityRole>()

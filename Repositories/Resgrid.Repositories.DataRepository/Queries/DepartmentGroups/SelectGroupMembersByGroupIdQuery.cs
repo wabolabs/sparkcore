@@ -3,7 +3,6 @@ using Resgrid.Model.Repositories.Queries.Contracts;
 using Resgrid.Repositories.DataRepository.Configs;
 using Resgrid.Repositories.DataRepository.Extensions;
 using static Resgrid.Framework.Testing.TestData;
-using Stripe;
 using System.Text.RegularExpressions;
 
 namespace Resgrid.Repositories.DataRepository.Queries.DepartmentGroups

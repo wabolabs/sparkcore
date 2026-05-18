@@ -1,6 +1,4 @@
-﻿using Stripe;
-
-namespace Resgrid.Model.Billing.Api;
+﻿namespace Resgrid.Model.Billing.Api;
 
 /// <summary>
 /// Current Plan for Department

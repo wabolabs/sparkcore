@@ -6,7 +6,6 @@ using Resgrid.Model;
 using Resgrid.Model.Providers;
 using Resgrid.Model.Services;
 using Resgrid.Providers.EmailProvider;
-using Stripe;
 using MailMessage = System.Net.Mail.MailMessage;
 using Resgrid.Model.Helpers;
 using Resgrid.Model.Identity;
@@ -523,20 +522,6 @@ namespace Resgrid.Services
 			return true;
 		}
 
-		public async Task<bool> SendCancellationWithRefundEmailAsync(Payment payment, Charge charge, Department department)
-		{
-			if (Config.SystemBehaviorConfig.DoNotBroadcast && !Config.SystemBehaviorConfig.BypassDoNotBroadcastDepartments.Contains(department.DepartmentId))
-				return false;
-
-			var user = _usersService.GetUserById(department.ManagingUserId, false);
-			var profile = await _userProfileService.GetProfileByUserIdAsync(user.UserId);
-
-			await _emailProvider.SendRefundReciept(profile.FirstName + " " + profile.LastName, user.Email, department.Name, DateTime.UtcNow.ToShortDateString(), (float.Parse(charge.AmountRefunded.ToString()) / 100f).ToString("C", Cultures.UnitedStates),
-					((PaymentMethods)payment.Method).ToString(), charge.Id, payment.PaymentId.ToString());
-
-			return true;
-		}
-
 		public async Task<bool> SendUserCancellationNotificationToTeamAsync(Department department, Payment payment, string userId, string reason)
 		{
 			if (Config.SystemBehaviorConfig.DoNotBroadcast && !Config.SystemBehaviorConfig.BypassDoNotBroadcastDepartments.Contains(department.DepartmentId))
@@ -553,17 +538,6 @@ namespace Resgrid.Services
 			await _emailProvider.TEAM_SendNofifySubCancelled(profile.FirstName + " " + profile.LastName, user.Email,
 					department.Name, department.DepartmentId.ToString(), reason, DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString(),
 					payment.Plan.Name, refundIssued.ToString());
-
-			return true;
-		}
-
-		public async Task<bool> SendRefundIssuedNotificationToTeam(Payment payment, Charge charge, Department department)
-		{
-			if (Config.SystemBehaviorConfig.DoNotBroadcast && !Config.SystemBehaviorConfig.BypassDoNotBroadcastDepartments.Contains(department.DepartmentId))
-				return false;
-
-			await _emailProvider.TEAM_SendNotifyRefundIssued(department.DepartmentId.ToString(), department.Name, DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString(),
-													(float.Parse(charge.AmountRefunded.ToString()) / 100f).ToString("C", Cultures.UnitedStates), ((PaymentMethods)payment.Method).ToString(), charge.Id, payment.PaymentId.ToString());
 
 			return true;
 		}
