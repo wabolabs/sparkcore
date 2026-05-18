@@ -1,16 +1,14 @@
-version: '3.9'
-
 services:
   web:
-    image: "resgridllc/resgridwebcore:0.6.70"
+    image: "ghcr.io/wabolabs/sparkcore/web:${IMAGE_TAG:-latest}"
     ports:
       - "5151:80"
     env_file:
       - resgrid.env
     restart: always
     networks:
-      - rgmain:
-          ipv4_address: 172.16.193.51
+      rgmain:
+        ipv4_address: 172.16.193.51
     depends_on:
       - api
       - events
@@ -24,15 +22,15 @@ services:
       - WAIT_TIMEOUT=300
 
   api:
-    image: "resgridllc/resgridwebservices:0.6.70"
+    image: "ghcr.io/wabolabs/sparkcore/api:${IMAGE_TAG:-latest}"
     ports:
       - "5152:80"
     env_file:
       - resgrid.env
     restart: always
     networks:
-      - rgmain:
-          ipv4_address: 172.16.193.52
+      rgmain:
+        ipv4_address: 172.16.193.52
     depends_on:
       - events
       - db
@@ -45,15 +43,15 @@ services:
       - WAIT_TIMEOUT=300
 
   events:
-    image: "resgridllc/resgridwebevents:0.6.70"
+    image: "ghcr.io/wabolabs/sparkcore/eventing:${IMAGE_TAG:-latest}"
     ports:
       - "5153:80"
     env_file:
       - resgrid.env
     restart: always
     networks:
-      - rgmain:
-          ipv4_address: 172.16.193.53
+      rgmain:
+        ipv4_address: 172.16.193.53
     depends_on:
       - db
       - redis
@@ -63,14 +61,47 @@ services:
       - WAIT_AFTER=120
       - WAIT_TIMEOUT=300
 
-  worker:
-    image: "resgridllc/resgridworkersconsole:0.6.70"
+  tts:
+    image: "ghcr.io/wabolabs/sparkcore/tts:${IMAGE_TAG:-latest}"
+    ports:
+      - "5154:8080"
     env_file:
       - resgrid.env
     restart: always
     networks:
-      - rgmain:
-          ipv4_address: 172.16.193.54
+      rgmain:
+        ipv4_address: 172.16.193.60
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+
+  mcp:
+    image: "ghcr.io/wabolabs/sparkcore/mcp:${IMAGE_TAG:-latest}"
+    ports:
+      - "5155:8080"
+    env_file:
+      - resgrid.env
+    restart: always
+    networks:
+      rgmain:
+        ipv4_address: 172.16.193.61
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - mongodb
+    environment:
+      - WAIT_HOSTS=db:1433,redis:6379,rabbitmq:15672,mongodb:27017
+      - WAIT_TIMEOUT=300
+      - ASPNETCORE_URLS=http://+:8080
+
+  worker:
+    image: "ghcr.io/wabolabs/sparkcore/worker:${IMAGE_TAG:-latest}"
+    env_file:
+      - resgrid.env
+    restart: always
+    networks:
+      rgmain:
+        ipv4_address: 172.16.193.54
     depends_on:
       - db
       - redis
@@ -85,14 +116,14 @@ services:
     ports:
       - "5157:1433"
     networks:
-      - rgmain:
-          ipv4_address: 172.16.193.55
+      rgmain:
+        ipv4_address: 172.16.193.55
     build: ./db
     environment:
       - SA_PASSWORD=Resgrid123!!
       - ACCEPT_EULA=Y
       - MSSQL_PID=Express
-    volumes: 
+    volumes:
       - type: bind
         source: ./docker-data/sql/data
         target: /var/opt/mssql/data
@@ -107,11 +138,11 @@ services:
     image: "redis:alpine"
     command: redis-server --save 60 1 --loglevel warning
     ports:
-     - "5158:6379"
+      - "5158:6379"
     restart: always
     networks:
-      - rgmain:
-          ipv4_address: 172.16.193.56
+      rgmain:
+        ipv4_address: 172.16.193.56
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -123,28 +154,45 @@ services:
       - "5159:5672"
     restart: always
     networks:
-      - rgmain:
-          ipv4_address: 172.16.193.57
+      rgmain:
+        ipv4_address: 172.16.193.57
 
-  elk:
-    image: sebp/elk
+  elasticsearch:
+    image: elasticsearch:8.17.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "5164:9200"
+    restart: always
+    networks:
+      rgmain:
+        ipv4_address: 172.16.193.58
+    volumes:
+      - ./docker-data/elasticsearch:/usr/share/elasticsearch/data
+
+  kibana:
+    image: kibana:8.17.0
     ports:
       - "5163:5601"
-      - "5164:9200"
-      - "5165:5044"
     restart: always
     networks:
-      - rgmain:
-          ipv4_address: 172.16.193.58
-      
+      rgmain:
+        ipv4_address: 172.16.193.62
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+
   mongodb:
-    image: mongo:4.4.18
+    image: mongo:7
     ports:
-      - 27017:27017
+      - "27017:27017"
     restart: always
     networks:
-      - rgmain:
-          ipv4_address: 172.16.193.59
+      rgmain:
+        ipv4_address: 172.16.193.59
     environment:
       - MONGO_INITDB_DATABASE=resgrid
       - MONGO_INITDB_ROOT_USERNAME=resgridUser
@@ -155,27 +203,28 @@ services:
       - ./docker-data/mongo/configdb:/data/db
 
   nginx:
-      image: nginx:1.15-alpine
-      restart: unless-stopped
-      volumes:
-        - ./docker-data/nginx:/etc/nginx/conf.d
-        - ./docker-data/certbot/conf:/etc/letsencrypt
-        - ./docker-data/certbot/www:/var/www/certbot
-      ports:
-        - "80:80"
-        - "443:443"
-      command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./docker-data/nginx:/etc/nginx/conf.d
+      - ./docker-data/certbot/conf:/etc/letsencrypt
+      - ./docker-data/certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
   certbot:
-      image: certbot/certbot
-      restart: unless-stopped
-      volumes:
-        - ./docker-data/certbot/conf:/etc/letsencrypt
-        - ./docker-data/certbot/www:/var/www/certbot
-      entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./docker-data/certbot/conf:/etc/letsencrypt
+      - ./docker-data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 networks:
-    rgmain:
-        ipam:
-            driver: default
-            config:
-              - subnet: 172.16.193.0/24
+  rgmain:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.193.0/24
