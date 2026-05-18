@@ -28,14 +28,35 @@ namespace Resgrid.Providers.NumberProvider
 
 		public async Task<bool> SendTextMessage(string number, string message, string departmentNumber, MobileCarriers carrier, int departmentId, bool forceGateway = false, bool isCall = false)
 		{
-			var wasTwillioSuccessful = await SendTextMessageViaTwillio(number, message, departmentNumber);
+			var provider = Config.SystemBehaviorConfig.SmsProviderType;
 
-			if (!wasTwillioSuccessful && isCall)
+			if (Config.SystemBehaviorConfig.DepartmentsToForceBackupSmsProvider.Contains(departmentId))
+				provider = Config.SystemBehaviorConfig.BackupSmsProviderType;
+
+			switch (provider)
 			{
-				return await SendTextMessageViaSignalWire(number, message, departmentNumber);
-			}
+				case Config.SmsProviderTypes.BulkVS:
+					return await SendTextMessageViaBulkVS(number, message, Config.NumberProviderConfig.BulkVSDefaultFromNumber);
 
-			return wasTwillioSuccessful;
+				case Config.SmsProviderTypes.VoipMs:
+					return await SendTextMessageViaVoipMs(number, message, Config.NumberProviderConfig.VoipMsDefaultFromNumber);
+
+				case Config.SmsProviderTypes.SignalWire:
+				{
+					var ok = await SendTextMessageViaSignalWire(number, message, departmentNumber);
+					if (!ok && isCall)
+						return await SendTextMessageViaTwillio(number, message, departmentNumber);
+					return ok;
+				}
+
+				default: // Twilio, Nexmo, Diafaan, Email — original logic
+				{
+					var wasTwillioSuccessful = await SendTextMessageViaTwillio(number, message, departmentNumber);
+					if (!wasTwillioSuccessful && isCall)
+						return await SendTextMessageViaSignalWire(number, message, departmentNumber);
+					return wasTwillioSuccessful;
+				}
+			}
 
 			/* I'm leaving the abomination below as a comment just in case I need to quickly reference the code block for any missing
 			 * edge cases at 1AM Dealing with a production issue. The below is the result of trying to give as much functionality
@@ -232,6 +253,65 @@ namespace Resgrid.Providers.NumberProvider
 			}
 			else
 			{
+				return false;
+			}
+		}
+
+		private async Task<bool> SendTextMessageViaBulkVS(string number, string message, string fromNumber)
+		{
+			try
+			{
+				if (!number.StartsWith("+"))
+					number = number.Length == 10 ? $"+1{number}" : $"+{number}";
+
+				var options = new RestClientOptions(Config.NumberProviderConfig.BulkVSBaseUrl)
+				{
+					Authenticator = new HttpBasicAuthenticator(
+						Config.NumberProviderConfig.BulkVSApiUsername,
+						Config.NumberProviderConfig.BulkVSApiPassword)
+				};
+				using var client = new RestClient(options);
+				var request = new RestRequest("/messageSendRequest", Method.Post);
+				request.AddJsonBody(new { From = fromNumber, To = number, Message = message });
+				var response = await client.ExecuteAsync<Models.BulkVSMessageResponse>(request);
+				return response.IsSuccessful;
+			}
+			catch (Exception ex)
+			{
+				Framework.Logging.LogException(ex);
+				return false;
+			}
+		}
+
+		private async Task<bool> SendTextMessageViaVoipMs(string number, string message, string fromNumber)
+		{
+			try
+			{
+				if (!number.StartsWith("+"))
+					number = number.Length == 10 ? $"+1{number}" : $"+{number}";
+
+				var did = Config.NumberProviderConfig.VoipMsDefaultFromNumber;
+				if (did.StartsWith("+1")) did = did.Substring(2);
+				else if (did.StartsWith("+")) did = did.Substring(1);
+
+				var dst = number.StartsWith("+1") ? number.Substring(2)
+				        : number.StartsWith("+")  ? number.Substring(1)
+				        : number;
+
+				using var client = new RestClient(Config.NumberProviderConfig.VoipMsBaseUrl);
+				var request = new RestRequest();
+				request.AddQueryParameter("api_username", Config.NumberProviderConfig.VoipMsApiUsername);
+				request.AddQueryParameter("api_password", Config.NumberProviderConfig.VoipMsApiPassword);
+				request.AddQueryParameter("method",       "sendSMS");
+				request.AddQueryParameter("did",          did);
+				request.AddQueryParameter("dst",          dst);
+				request.AddQueryParameter("message",      message);
+				var response = await client.ExecuteAsync(request);
+				return response.IsSuccessful;
+			}
+			catch (Exception ex)
+			{
+				Framework.Logging.LogException(ex);
 				return false;
 			}
 		}

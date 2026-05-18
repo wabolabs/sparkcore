@@ -23,6 +23,18 @@ namespace Resgrid.Config
 		public static string DiafaanSmsGatewayUserName = "";
 		public static string DiafaanSmsGatewayPassword = "";
 
+		// BulkVS SMS (https://portal.bulkvs.com)
+		public static string BulkVSBaseUrl = "https://portal.bulkvs.com/api/v1.0";
+		public static string BulkVSApiUsername = "";
+		public static string BulkVSApiPassword = "";
+		public static string BulkVSDefaultFromNumber = "";
+
+		// Voip.ms SMS (https://voip.ms)
+		public static string VoipMsBaseUrl = "https://voip.ms/api/v1/rest.php";
+		public static string VoipMsApiUsername = "";
+		public static string VoipMsApiPassword = "";
+		public static string VoipMsDefaultFromNumber = "";
+
 		// SignalWire (https://signalwire.com)
 		public static string SignalWireApiUrl = "";
 		public static string SignalWireResgridNumber = "";    // Main prod
@@ -63,6 +75,17 @@ namespace Resgrid.Config
 		SignalWire = 1,
 		Nexmo = 2,
 		Email = 3,
-		Diafaan = 4
+		Diafaan = 4,
+		BulkVS = 5,
+		VoipMs = 6
+	}
+
+	/// <summary>
+	/// Possible providers for placing outbound voice calls
+	/// </summary>
+	public enum OutboundVoiceProviderTypes
+	{
+		Twilio = 0,
+		SipTrunk = 1
 	}
 }

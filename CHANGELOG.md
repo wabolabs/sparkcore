@@ -79,5 +79,35 @@ Initial release of SparkOps Core — a self-hosted, fully open-source fork of
 
 ---
 
+## [Unreleased] — Phase 5: BulkVS/Voip.ms SMS + SIP trunk voice provider
+
+### SMS — new providers
+
+- Added `SmsProviderTypes.BulkVS = 5` and `SmsProviderTypes.VoipMs = 6` to `NumberProviderConfig`.
+- Added config fields for each: `BulkVSBaseUrl`, `BulkVSApiUsername`, `BulkVSApiPassword`, `BulkVSDefaultFromNumber`; `VoipMsBaseUrl`, `VoipMsApiUsername`, `VoipMsApiPassword`, `VoipMsDefaultFromNumber`.
+- `TextMessageProvider` gains `SendTextMessageViaBulkVS()` (POST REST to `portal.bulkvs.com/api/v1.0/messageSendRequest`) and `SendTextMessageViaVoipMs()` (GET REST to `voip.ms/api/v1/rest.php?method=sendSMS`).
+- `SendTextMessage()` routing now respects `SystemBehaviorConfig.SmsProviderType` for all six providers; existing Twilio/SignalWire fallback behavior preserved.
+- All existing providers (Twilio, SignalWire, Nexmo, Email, Diafaan) left intact.
+
+### Number provisioning — BulkVS
+
+- Added `BulkVSNumberProvider` implementing `INumberProvider` (DID search via `/did/search`, purchase via `/did/purchaseDid`).
+- `NumberProviderFactory` routes to `BulkVSNumberProvider` when `SmsProviderType == BulkVS`; Twilio remains the default.
+
+### SIP trunk voice provider
+
+- Added `OutboundVoiceProviderTypes` enum (`Twilio = 0`, `SipTrunk = 1`) to `NumberProviderConfig`.
+- Added `SystemBehaviorConfig.OutboundVoiceProviderType` field (default: `Twilio`).
+- Added `SipTrunkConfig` static class (new `Core/Resgrid.Config/SipTrunkConfig.cs`) with fields `SipDomain`, `SipServer`, `SipPort`, `SipUsername`, `SipPassword`, `SipFromNumber` and commented presets for **BulkVS**, **Voip.ms** (with PoP options), and **Anveo Direct**.
+- `SipTrunkOutboundVoiceProvider` implements `IOutboundVoiceProvider` using SIPSorcery 8.0.0:
+  - `CommunicateCallAsync`: places outbound SIP call, fetches dispatch audio from the TTS microservice, streams 16-bit PCM via `AudioExtrasSource.SendAudioFromStream`, waits up to 30 s for DTMF "1" (Responding to Scene), plays confirmation and hangs up.
+  - `SendVoiceVerificationCallAsync`: decrypts the stored verification code, marks it consumed, streams the spoken digit sequence (×3) via SIP, then hangs up.
+  - Audio pipeline: NAudio `WdlResamplingSampleProvider` resamples TTS WAV to 8 kHz mono 16-bit PCM (cross-platform, no MediaFoundation).
+  - Static voice prompts (menu, confirmation, verification intro/outro) pre-fetched on first call and cached in-memory.
+- `NumbersProviderModule` conditionally registers `SipTrunkOutboundVoiceProvider` or `OutboundVoiceProvider` (Twilio) based on `OutboundVoiceProviderType`.
+- New NuGet packages: `SIPSorcery 8.0.0`, `SIPSorceryMedia.Abstractions 1.2.1`, `NAudio 2.2.1` (all in `Resgrid.Providers.Number`).
+
+---
+
 *Based on Resgrid Core — copyright 2021 the Resgrid Core Authors and Resgrid, LLC.*
 *Released under the Apache License 2.0.*

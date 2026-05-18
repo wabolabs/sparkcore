@@ -128,6 +128,11 @@ namespace Resgrid.Config
 		public static VoipProviderTypes VoipProviderType = VoipProviderTypes.LiveKit;
 
 		/// <summary>
+		/// Sets the type of outbound voice call provider to use
+		/// </summary>
+		public static OutboundVoiceProviderTypes OutboundVoiceProviderType = OutboundVoiceProviderTypes.Twilio;
+
+		/// <summary>
 		/// Sets the type of sms provider to use
 		/// </summary>
 		public static SmsProviderTypes SmsProviderType = SmsProviderTypes.SignalWire;

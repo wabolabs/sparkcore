@@ -9,7 +9,11 @@ namespace Resgrid.Providers.NumberProvider
 		{
 			builder.RegisterType<NumberProviderFactory>().As<INumberProvider>().InstancePerLifetimeScope();
 			builder.RegisterType<TextMessageProvider>().As<ITextMessageProvider>().InstancePerLifetimeScope();
-			builder.RegisterType<OutboundVoiceProvider>().As<IOutboundVoiceProvider>().InstancePerLifetimeScope();
+
+			if (Config.SystemBehaviorConfig.OutboundVoiceProviderType == Config.OutboundVoiceProviderTypes.SipTrunk)
+				builder.RegisterType<SipTrunkOutboundVoiceProvider>().As<IOutboundVoiceProvider>().InstancePerLifetimeScope();
+			else
+				builder.RegisterType<OutboundVoiceProvider>().As<IOutboundVoiceProvider>().InstancePerLifetimeScope();
 
 			builder.RegisterType<PhoneNumberProcesserProvider>().As<IPhoneNumberProcesserProvider>().SingleInstance();
 		}
