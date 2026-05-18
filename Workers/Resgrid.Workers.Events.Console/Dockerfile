@@ -1,9 +1,15 @@
-#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
+# NOTE: This project references Resgrid.Providers.Firebase which was removed
+# from this fork. The project will not build until that dependency is removed
+# or replaced. This Dockerfile is kept for reference only and is excluded from CI.
 
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim AS base
+ARG BUILD_VERSION=1.0.0
+
+FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
+ARG BUILD_VERSION
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+ARG BUILD_VERSION
 WORKDIR /src
 COPY ["Workers/Resgrid.Workers.Events.Console/Resgrid.Workers.Events.Console.csproj", "Workers/Resgrid.Workers.Events.Console/"]
 COPY ["Providers/Resgrid.Providers.Bus.Rabbit/Resgrid.Providers.Bus.Rabbit.csproj", "Providers/Resgrid.Providers.Bus.Rabbit/"]
@@ -17,7 +23,6 @@ COPY ["Providers/Resgrid.Providers.Cache/Resgrid.Providers.Cache.csproj", "Provi
 COPY ["Providers/Resgrid.Providers.Geo/Resgrid.Providers.Geo.csproj", "Providers/Resgrid.Providers.Geo/"]
 COPY ["Repositories/Resgrid.Repositories.DataRepository/Resgrid.Repositories.DataRepository.csproj", "Repositories/Resgrid.Repositories.DataRepository/"]
 COPY ["Providers/Resgrid.Providers.Number/Resgrid.Providers.Number.csproj", "Providers/Resgrid.Providers.Number/"]
-COPY ["Providers/Resgrid.Providers.Firebase/Resgrid.Providers.Firebase.csproj", "Providers/Resgrid.Providers.Firebase/"]
 COPY ["Providers/Resgrid.Providers.Email/Resgrid.Providers.Email.csproj", "Providers/Resgrid.Providers.Email/"]
 COPY ["Providers/Resgrid.Providers.Audio/Resgrid.Providers.Audio.csproj", "Providers/Resgrid.Providers.Audio/"]
 COPY ["Providers/Resgrid.Providers.Marketing/Resgrid.Providers.Marketing.csproj", "Providers/Resgrid.Providers.Marketing/"]
@@ -28,12 +33,15 @@ COPY ["Providers/Resgrid.Providers.Migrations/Resgrid.Providers.Migrations.cspro
 RUN dotnet restore "Workers/Resgrid.Workers.Events.Console/Resgrid.Workers.Events.Console.csproj"
 COPY . .
 WORKDIR "/src/Workers/Resgrid.Workers.Events.Console"
-RUN dotnet build "Resgrid.Workers.Events.Console.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Resgrid.Workers.Events.Console.csproj" -c Release -o /app/publish
+ARG BUILD_VERSION
+RUN dotnet publish "Resgrid.Workers.Events.Console.csproj" -c Release -o /app/publish -p:Version=${BUILD_VERSION}
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /app/publish/wait
+RUN chmod +x /app/publish/wait
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Resgrid.Workers.Events.Console.dll"]
+ENTRYPOINT ["./wait"]
+CMD ["dotnet", "Resgrid.Workers.Events.Console.dll"]
