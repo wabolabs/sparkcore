@@ -10,7 +10,7 @@ namespace Resgrid.Providers.EmailProvider
 			builder.RegisterType<PostmarkTemplateProvider>().As<IEmailProvider>().InstancePerLifetimeScope();
 			builder.RegisterType<CallEmailProvider>().As<ICallEmailProvider>().InstancePerLifetimeScope();
 			builder.RegisterType<DistributionListProvider>().As<IDistributionListProvider>().InstancePerLifetimeScope();
-			builder.RegisterType<PostmarkEmailSender>().As<IEmailSender>().InstancePerLifetimeScope();
+			builder.RegisterType<SmtpEmailSender>().As<IEmailSender>().InstancePerLifetimeScope();
 			builder.RegisterType<AmazonEmailSender>().As<IAmazonEmailSender>().InstancePerLifetimeScope();
 		}
 	}

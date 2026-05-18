@@ -8,8 +8,8 @@ using System.Web;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using PostmarkDotNet;
 using Resgrid.Framework;
+using Resgrid.Web.Services.Models;
 using Resgrid.Model;
 using Resgrid.Model.Queue;
 using Resgrid.Model.Services;
@@ -95,7 +95,7 @@ namespace Resgrid.Web.Services.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status400BadRequest)]
 		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-		public async Task<ActionResult> Receive(PostmarkInboundMessage message, CancellationToken cancellationToken)
+		public async Task<ActionResult> Receive(InboundWebhookMessage message, CancellationToken cancellationToken)
 		{
 			if (message != null)
 			{

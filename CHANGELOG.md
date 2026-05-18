@@ -66,5 +66,18 @@ Initial release of SparkOps Core — a self-hosted, fully open-source fork of
 
 ---
 
+## [Unreleased] — Phase 4: Email — replace Postmark/SES with plain SMTP
+
+- Removed `Postmark 5.2.0` and `AWSSDK.SimpleEmail 3.7.402.63` NuGet packages from `Resgrid.Providers.Email`.
+- Deleted `PostmarkEmailSender` (Postmark SDK wrapper).
+- Added `SmtpEmailSender` — new `IEmailSender` implementation using MailKit's `SmtpClient`; reads from `OutboundEmailServerConfig` (Host, Port, EnableSsl, UserName, Password); negotiates STARTTLS automatically, falls back to SSL-on-connect when `EnableSsl = true`.
+- Rewrote `AmazonEmailSender` to send `MimeMessage` objects via SMTP (MailKit) instead of AWS SES; `IAmazonEmailSender` interface unchanged.
+- Updated `EmailProviderModule` to register `SmtpEmailSender` in place of `PostmarkEmailSender`.
+- `EmailController.Receive()`: replaced `PostmarkInboundMessage` parameter with new generic `InboundWebhookMessage` DTO (same JSON shape, no SDK dependency); removed `using PostmarkDotNet`. All dispatch/distribution-list/group business logic preserved unchanged.
+- Removed Postmark-specific fields from `OutboundEmailServerConfig` (`PostmarkApiKey`, `PostmarkMessageStream`, all template IDs); removed AWS fields (`AwsAccessKey`, `AwsSecretKey`). Only SMTP fields remain.
+- Simplified `OutboundEmailTypes` enum to a single `Smtp = 0` value.
+
+---
+
 *Based on Resgrid Core — copyright 2021 the Resgrid Core Authors and Resgrid, LLC.*
 *Released under the Apache License 2.0.*
