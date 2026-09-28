@@ -10,6 +10,7 @@ using Resgrid.Model;
 using Resgrid.Web.Helpers;
 using Resgrid.Web.Services.Models.v4.CallNotes;
 using System;
+using System.Globalization;
 using Resgrid.Model.Helpers;
 using static Resgrid.Web.Services.Models.v4.CallNotes.CallNotesResult;
 using System.Net.Mime;
@@ -132,7 +133,11 @@ namespace Resgrid.Web.Services.Controllers.v4
 
 			var note = new CallNote();
 			note.CallId = int.Parse(input.CallId);
-			note.Timestamp = DateTime.UtcNow;
+			// Callers that ingest a historical CAD chronology (a run card's
+			// dispatched/en route/on scene/cleared comments) need each note to
+			// keep the time it actually happened. Without this every note in a
+			// backfill lands at the publish instant and the sequence is lost.
+			note.Timestamp = ResolveNoteTimestamp(input.Timestamp);
 			note.Note = input.Note;
 			note.UserId = input.UserId;
 			note.Source = (int)CallNoteSources.Mobile;
@@ -174,6 +179,37 @@ namespace Resgrid.Web.Services.Controllers.v4
 			ResponseHelper.PopulateV4ResponseData(result);
 
 			return CreatedAtAction(nameof(GetCallNotes), new { callId = saved.CallId }, result);
+		}
+
+		/// <summary>
+		/// Turns the optional caller-supplied note time into a value safe to store.
+		///
+		/// The input is untrusted, so it is only ever used for display ordering:
+		/// an unparseable value falls back to now rather than failing the write,
+		/// and a future value is clamped so it cannot sort above live traffic
+		/// forever.
+		///
+		/// A value carrying no offset is read as UTC, never as the server's
+		/// local zone and never as the client's — a naive local time silently
+		/// shifts the whole chronology by the offset, which is the bug this
+		/// fixes.
+		/// </summary>
+		public static DateTime ResolveNoteTimestamp(string supplied)
+		{
+			var now = DateTime.UtcNow;
+
+			if (String.IsNullOrWhiteSpace(supplied))
+				return now;
+
+			if (!DateTime.TryParse(supplied, CultureInfo.InvariantCulture,
+					DateTimeStyles.RoundtripKind, out var parsed))
+				return now;
+
+			var utc = parsed.Kind == DateTimeKind.Unspecified
+				? DateTime.SpecifyKind(parsed, DateTimeKind.Utc)
+				: parsed.ToUniversalTime();
+
+			return utc > now ? now : utc;
 		}
 
 		public static CallNoteResultData ConvertCallNote(CallNote note, string fullName, Department department)

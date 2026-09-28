@@ -34,5 +34,12 @@ namespace Resgrid.Web.Services.Models.v4.CallNotes
 		/// Longitude of when the note was taken
 		/// </summary>
 		public string Longitude { get; set; }
+
+		/// <summary>
+		/// Time the note was originally taken, ISO-8601. Optional; when
+		/// omitted the server stamps the current UTC time, which is the
+		/// behaviour every existing caller already gets.
+		/// </summary>
+		public string Timestamp { get; set; }
 	}
 }
