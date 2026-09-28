@@ -77,12 +77,28 @@ Then work in three groups:
 Replay these essentially as-is. They get the fork current and CI green with
 low risk.
 
+> **Blocker found during the pilot (2026-09-28): upstream cannot be built
+> at all without a paid Docker subscription.** Every Dockerfile in
+> `upstream/master` bases on `dhi.io/*` — Docker's hardened-images registry
+> — e.g. `dhi.io/aspnetcore:9.0.16-debian13@sha256:9616...`. Pulling it
+> fails with `unauthorized`, and the Dockerfiles are written *around* it:
+> the `tzdata` reinstall hack (DHI marks tzdata installed but ships no zone
+> files) and the no-shell distroless `ENTRYPOINT ["./wait"]`. The fork's
+> Phase 2 already replaced all of this with MCR images.
+>
+> This promotes the Dockerfile commit (`928395e3`) from "cheap replay" to
+> **the thing that makes the tree buildable**, and it should therefore go
+> *first* in Group A, not alongside CI. To prove the pilot patch, the
+> Dockerfile was temporarily switched to `mcr.microsoft.com/dotnet/*:9.0`
+> bases, which built cleanly — so the substitution is known-good.
+
 - `d9a0802e` (esbuild ETXTBSY) — cherry-picks clean.
 - `e5660b7b` (compose/GHCR) — 1 conflict in `Docker/docker-compose.yml`:
   keep the fork's GHCR image refs, take upstream's service definitions.
-- `928395e3` (Dockerfiles/CI) — 7 conflicts, but mechanical: upstream
+- `928395e3` (Dockerfiles) — 7 conflicts, but mechanical: upstream
   restructured the Dockerfiles, so re-apply the base-image and entrypoint
-  intent rather than the literal diff.
+  intent rather than the literal diff. **Do this first — see the blocker
+  note above.**
 - `58c3f08f`, `18357b2b` (CI tweaks) — fold into the same workflow edit.
 
 ### Group B — replay-by-intent (do not cherry-pick the diff)
@@ -195,12 +211,30 @@ PK exists. **Set the timestamp before the first save**; if the second save
 reconstructs the `CallNote` it must carry the timestamp through, or the
 round trip will overwrite it with `UtcNow` exactly as this bug does.
 
-### Verification
+### Verification — done 2026-09-28
 
-- Unit test on the controller: supplied ISO-8601 → stored verbatim; omitted →
-  near-`UtcNow`; naive local → treated as UTC, not shifted.
-- Live end-to-end from bravo: republish one incident and confirm
-  `callnotes.timestamp` shows the per-comment time rather than publish time.
+`Tests/Resgrid.Tests/CallNotes/CallNoteTimestampTests.cs`, 8 tests, all
+green (`dotnet test`, NUnit + FluentAssertions, matching the project's
+existing style — not xUnit).
+
+Proven end-to-end against the live bravo stack, not just in unit tests.
+Built `sparkops/api:callnote-pilot`, loaded it, pointed the live `api`
+service at it, and posted five notes:
+
+| Sent | Stored | Result |
+|---|---|---|
+| `2026-09-27T15:00:00Z` | `2026-09-27 15:00:00` | kept verbatim |
+| `2026-09-27T11:00:00-04:00` | `2026-09-27 15:00:00` | converted correctly |
+| `2026-09-27T15:00:00` (no offset) | `2026-09-27 15:00:00` | read as UTC, not shifted |
+| omitted | now | backward-compatible |
+| `2027-01-01T00:00:00Z` | now | clamped |
+
+Then restored `resgridllc/resgridwebservices:4.862.0` and deleted the probe
+rows. The live stack is back on the upstream image; `docker-compose.yml`
+backup at `/storage/hwy58vfd/resgrid/docker-compose.pre-pilot.bak`.
+
+**The pilot is done.** `sparkops/reseat` carries exactly one commit ahead of
+`upstream/master` (three files, no drift), built and tested.
 
 ---
 
