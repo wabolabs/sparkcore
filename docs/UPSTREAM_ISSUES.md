@@ -181,6 +181,57 @@ knowing before someone attempts this:
 
 ---
 
+## Draft 3 — a missing config value takes down the events container
+
+**Title:** `Web.Eventing crash-loops forever when JwtConfig.EventsClientSecret is unset, and never applies it to an existing RGEvents client`
+
+**Labels:** `bug`, `configuration`
+
+### Summary
+
+Two related faults in the eventing service's startup:
+
+1. `Web/Resgrid.Web.Eventing/Startup.cs` (the `.AddValidation(...)` block) calls
+   `SetClientSecret(JwtConfig.EventsClientSecret)`. When that setting is unset —
+   its default is `""` — OpenIddict throws `ArgumentException: The client secret
+   cannot be null or empty`. Because this happens inside `ConfigureServices`, the
+   host never builds, the process exits, and `restart: unless-stopped` puts it in
+   a permanent crash loop. The SignalR hubs are dead for as long as that
+   continues, and the log line is the only signal.
+2. `Web/Resgrid.Web.Services/Worker.cs` registers the `RGEvents` client only when
+   `FindByClientIdAsync` returns null. An `RGEvents` row that already exists
+   without a secret is therefore never updated, so setting the configuration
+   value afterwards has no effect until the row is deleted by hand.
+
+### Why it matters
+
+A fresh install, or any install whose database was seeded before the setting
+existed, gets a crash-looping container rather than a working hub. Fault 2 makes
+it worse: the obvious remedy — set the secret, restart — silently does nothing,
+because the registration is skipped.
+
+### Requested change
+
+- Guard the `SetClientSecret` call so a blank value is skipped. A missing config
+  value should degrade to a failed hub registration, not a restart loop.
+- Make `Worker.cs` reconcile the client: update the secret when the existing
+  client has none, rather than only creating when absent.
+
+### Note on the runtime behaviour
+
+Guarding the call is necessary but not sufficient — OpenIddict still rejects a
+secretless introspection request with *"The client secret cannot be null or empty
+when using introspection"*. So the setting must genuinely be configured; the
+guard only converts a fatal startup crash into a clean per-request auth failure.
+Worth knowing so the guard isn't mistaken for a complete fix.
+
+Also worth documenting (we had to discover it): the secret must be applied via
+`IOpenIddictApplicationManager`, which hashes it. Writing a plaintext value
+directly into `OpenIddictApplications.ClientSecret` yields
+`401 invalid_client`, because OpenIddict compares hashes.
+
+---
+
 ## Draft 3 — (placeholder) MSSQL migration `ConstraintExists`
 
 Already filed as [#536](https://github.com/Resgrid/Core/issues/536). Left
