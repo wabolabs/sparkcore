@@ -133,10 +133,10 @@ cherry-pick produces something worse than re-applying the goal.
   predates, so the fork no longer removes billing. What survives from this
   item is only the *goal* (an install needs no billing relationship), which
   is now met by a 56-line change instead of a 1,343-line deletion.
-- **Phase 4 (SMTP email).** Conflicts in `EmailProviderModule.cs` and
-  `PostmarkEmailSender.cs`. The MailKit `SmtpEmailSender` itself is new code
-  and carries over cleanly; the conflict is only the registration and the
-  deletion.
+- ~~**Phase 4 (SMTP email).**~~ — **SUPERSEDED 2026-09-28, see §4.2.** SMTP
+  is upstream's default and already implemented, so there was nothing to
+  replace. The old Phase 4's MailKit `SmtpEmailSender` is unnecessary; what
+  the fork needed was a bug fix in the existing path.
 
 ### Group C — drop
 
@@ -197,6 +197,40 @@ and it would fight upstream's seed migrations on every merge.
   trade-off accepted deliberately: a smaller diff that survives upstream
   merges, over a pruned tree that conflicts on every one.
 - Items 1 and 3 are unaffected. Items 2 and 5 unaffected.
+
+### 4.2 Email: SMTP is already upstream's default (2026-09-28)
+
+The old Phase 4 assumed a self-hosted install needed a commercial email
+vendor. It does not. `SystemBehaviorConfig.OutboundEmailType` already
+defaults to `OutboundEmailTypes.Smtp`, `PostmarkEmailSender.Send(Email)`
+already has a working SMTP branch, and the templates
+(`Template/*.html`) already render locally via Mustachio — the class named
+`PostmarkTemplateProvider` only *sends* through the injected `IEmailSender`.
+
+What was actually broken, and it is worse than a missing feature:
+
+- **`SendEmail(MailMessage)` ignored `OutboundEmailType`** and built a
+  `PostmarkClient` unconditionally. Its only callers are `EmailService` and
+  `SmsService`, so on a correctly configured self-hosted install **password
+  recovery, invitations, message notifications and the SMS text-command
+  replies were all silently dropped**.
+- The three SMTP blocks ignored `Port` and `EnableSsl`, so only a plaintext
+  port-25 relay could work, and they swallowed exceptions without logging.
+
+Fixed as `5bc43742`: one `SendViaSmtp` helper that honours port and TLS and
+logs failures, and `SendEmail` routes on the configured type.
+
+**Deliberate non-goals**, matching the Path A decision on billing: the class
+keeps the name `PostmarkEmailSender` and the `Postmark`/`AWSSDK.SimpleEmail`
+packages stay. They are unreachable without config, and renaming or removing
+them would put every upstream merge into these files in conflict for no
+functional gain. The clean-but-unused `EmailSender`/`SmtpClientWrapper`/
+`ISmtpClient` trio is left alone for the same reason.
+
+**Consequences for §4:** item 4 (billing) and the old Phase 4 (email) are
+both now closed, and neither required the deletion the plan originally
+anticipated. Group B is empty; the remaining work is item 1 (done), items 2
+and 5 (new patches), and item 3 (branding).
 
 ---
 
