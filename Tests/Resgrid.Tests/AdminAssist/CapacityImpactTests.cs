@@ -60,7 +60,13 @@ namespace Resgrid.Tests.AdminAssist
 		public async Task Fresh_limit_read_also_bypasses_the_underlying_plan_cache()
 		{
 			var previous = Resgrid.Config.SystemBehaviorConfig.RedirectHomeToLogin;
+			var previousUrl = Resgrid.Config.SystemBehaviorConfig.BillingApiBaseUrl;
+			var previousKey = Resgrid.Config.ApiConfig.BackendInternalApikey;
 			Resgrid.Config.SystemBehaviorConfig.RedirectHomeToLogin = false;
+			// A plan limit only applies when billing is configured; an unconfigured install is
+			// self-hosted and unlimited, which is covered by OpenSourceUnlimitedTests.
+			Resgrid.Config.SystemBehaviorConfig.BillingApiBaseUrl = "https://billing.invalid";
+			Resgrid.Config.ApiConfig.BackendInternalApikey = "test-only";
 			try
 			{
 				var subscription = new Mock<ISubscriptionsService>();
@@ -72,7 +78,12 @@ namespace Resgrid.Tests.AdminAssist
 				subscription.Verify(s => s.GetCurrentPlanForDepartmentAsync(7, true), Times.Once);
 				subscription.Verify(s => s.GetCurrentPlanForDepartmentAsync(7, false), Times.Never);
 			}
-			finally { Resgrid.Config.SystemBehaviorConfig.RedirectHomeToLogin = previous; }
+			finally
+			{
+				Resgrid.Config.SystemBehaviorConfig.RedirectHomeToLogin = previous;
+				Resgrid.Config.SystemBehaviorConfig.BillingApiBaseUrl = previousUrl;
+				Resgrid.Config.ApiConfig.BackendInternalApikey = previousKey;
+			}
 		}
 	}
 }

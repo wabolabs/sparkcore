@@ -13,12 +13,19 @@ namespace Resgrid.Tests.Services
 	/// <summary>
 	/// The personnel-limit check that gates AddPerson, ReactivateUser and AddExistingUser reads the plan counts fresh;
 	/// the Personnel index keeps the 14-day cached answer for showing the Add button.
+	///
+	/// These run with the billing API configured, because that is the only configuration in which a
+	/// plan limit is enforced at all: an unconfigured install is self-hosted and unlimited (see
+	/// OpenSourceUnlimitedTests). Setting the two config values is what makes this fixture a test of
+	/// the gate rather than of the self-hosted default.
 	/// </summary>
 	[TestFixture, NonParallelizable]
 	public class PersonnelLimitGateTests
 	{
 		private const int Dept = 52;
 		private bool _cacheEnabled;
+		private string _billingUrl;
+		private string _billingKey;
 		private Mock<ISubscriptionsService> _subscriptions;
 		private Mock<ICacheProvider> _cache;
 		private DepartmentPlanCount _counts;
@@ -29,6 +36,11 @@ namespace Resgrid.Tests.Services
 		{
 			_cacheEnabled = Resgrid.Config.SystemBehaviorConfig.CacheEnabled;
 			Resgrid.Config.SystemBehaviorConfig.CacheEnabled = true;
+
+			_billingUrl = Resgrid.Config.SystemBehaviorConfig.BillingApiBaseUrl;
+			_billingKey = Resgrid.Config.ApiConfig.BackendInternalApikey;
+			Resgrid.Config.SystemBehaviorConfig.BillingApiBaseUrl = "https://billing.invalid";
+			Resgrid.Config.ApiConfig.BackendInternalApikey = "test-only";
 
 			// No plan resolves to the free-plan personnel limit of 10.
 			_counts = new DepartmentPlanCount { UsersCount = 9, UnitsCount = 0 };
@@ -45,7 +57,12 @@ namespace Resgrid.Tests.Services
 		}
 
 		[TearDown]
-		public void TearDown() => Resgrid.Config.SystemBehaviorConfig.CacheEnabled = _cacheEnabled;
+		public void TearDown()
+		{
+			Resgrid.Config.SystemBehaviorConfig.CacheEnabled = _cacheEnabled;
+			Resgrid.Config.SystemBehaviorConfig.BillingApiBaseUrl = _billingUrl;
+			Resgrid.Config.ApiConfig.BackendInternalApikey = _billingKey;
+		}
 
 		[Test]
 		public async Task A_gating_check_reads_fresh_counts_and_refuses_at_the_limit()

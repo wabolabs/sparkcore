@@ -23,12 +23,32 @@ namespace Resgrid.Services
 		}
 
 		/// <summary>
+		/// Whether this install is talking to Resgrid's billing service at all.
+		///
+		/// <see cref="Config.SystemBehaviorConfig.BillingApiBaseUrl"/> is documented as "Do not set
+		/// for Open-Source install", and SubscriptionsService already falls back to the local free
+		/// plan when it is blank. The problem is that the free plan is a *cap* (10 personnel, 10
+		/// units) and the feature gates below read it literally, so an open-source install silently
+		/// limits itself to a tier nobody bought or chose.
+		///
+		/// Unconfigured billing therefore means unlimited. This is not "failing open" on missing
+		/// billing data — it is the absence of a billing relationship, which is the intended state
+		/// for a self-hosted deployment and for Highway 58 (130 members).
+		/// </summary>
+		private static bool IsBillingConfigured() =>
+			!String.IsNullOrWhiteSpace(Config.SystemBehaviorConfig.BillingApiBaseUrl) &&
+			!String.IsNullOrWhiteSpace(Config.ApiConfig.BackendInternalApikey);
+
+		/// <summary>
 		/// Validates that a department is within the limits for their subscription plan.
 		/// </summary>
 		/// <param name="departmentId">DepartmentId to check the limits for</param>
 		/// <returns>Return true if the department is within limits and false if they have exceeded them</returns>
 		public async Task<bool> ValidateDepartmentIsWithinLimitsAsync(int departmentId)
 		{
+			if (!IsBillingConfigured())
+				return true;
+
 			var departmentCount = await _subscriptionsService.GetPlanCountsForDepartmentAsync(departmentId);
 			var plan = await _subscriptionsService.GetCurrentPlanForDepartmentAsync(departmentId);
 
@@ -52,6 +72,9 @@ namespace Resgrid.Services
 
 		public async Task<bool> CanDepartmentAddNewUserAsync(int departmentId, bool bypassCache = false)
 		{
+			if (!IsBillingConfigured())
+				return true;
+
 			//int userCount = (await _departmentsService.GetAllUsersForDepartmentUnlimitedMinusDisabledAsync(departmentId)).Count;
 
 			//if (userCount >= await GetPersonnelLimitForDepartmentAsync(departmentId))
@@ -82,6 +105,9 @@ namespace Resgrid.Services
 
 		public async Task<bool> CanDepartmentAddNewUnit(int departmentId)
 		{
+			if (!IsBillingConfigured())
+				return true;
+
 			var departmentCount = await _subscriptionsService.GetPlanCountsForDepartmentAsync(departmentId);
 
 			// GetPlanCountsForDepartmentAsync can return null (e.g. Billing API unavailable). Deny the add
@@ -108,6 +134,9 @@ namespace Resgrid.Services
 
 		public async Task<int> GetEntityLimitForDepartmentAsync(int departmentId, Plan plan = null)
 		{
+			if (!IsBillingConfigured())
+				return int.MaxValue;
+
 			if (plan == null)
 				plan = await _subscriptionsService.GetCurrentPlanForDepartmentAsync(departmentId);
 
@@ -143,6 +172,9 @@ namespace Resgrid.Services
 
 		public async Task<bool> CanDepartmentProvisionNumberAsync(int departmentId)
 		{
+			if (!IsBillingConfigured())
+				return true;
+
 			var plan = await _subscriptionsService.GetCurrentPlanForDepartmentAsync(departmentId);
 
 			// GetCurrentPlanForDepartmentAsync can return null (e.g. Billing API unavailable). Guard before
@@ -168,6 +200,9 @@ namespace Resgrid.Services
 
 		public async Task<bool> CanDepartmentUseVoiceAsync(int departmentId)
 		{
+			if (!IsBillingConfigured())
+				return true;
+
 			var plan = await _subscriptionsService.GetCurrentPlanForDepartmentAsync(departmentId);
 
 			// GetCurrentPlanForDepartmentAsync can return null (e.g. Billing API unavailable); guard before
@@ -185,6 +220,9 @@ namespace Resgrid.Services
 
 		public async Task<bool> CanDepartmentUseLinksAsync(int departmentId)
 		{
+			if (!IsBillingConfigured())
+				return true;
+
 			var plan = await _subscriptionsService.GetCurrentPlanForDepartmentAsync(departmentId);
 
 			// GetCurrentPlanForDepartmentAsync can return null (e.g. Billing API unavailable); guard before
@@ -200,6 +238,9 @@ namespace Resgrid.Services
 
 		public async Task<bool> CanDepartmentCreateOrdersAsync(int departmentId)
 		{
+			if (!IsBillingConfigured())
+				return true;
+
 			var plan = await _subscriptionsService.GetCurrentPlanForDepartmentAsync(departmentId);
 
 			// GetCurrentPlanForDepartmentAsync can return null (e.g. Billing API unavailable); guard before
@@ -215,6 +256,21 @@ namespace Resgrid.Services
 
 		public async Task<DepartmentLimits> GetLimitsForEntityPlanWithFallbackAsync(int departmentId, bool bypassCache = false)
 		{
+			// Every caller that cares about a limit reads this method — including the ones that
+			// never go through the getters below and would otherwise truncate the roster or refuse
+			// a save (UsersService.Take(limit.PersonnelLimit) is the worst of them: on the free plan
+			// a 130-member department would render 10 people with no error anywhere). Return
+			// unlimited here so one short-circuit covers all of them.
+			if (!IsBillingConfigured())
+			{
+				return new DepartmentLimits
+				{
+					PersonnelLimit = int.MaxValue,
+					UnitsLimit = int.MaxValue,
+					EntityTotal = 0,
+				};
+			}
+
 			async Task<DepartmentLimits> getCurrentPlanForDepartmentAsync()
 			{
 				var limits = new DepartmentLimits();
