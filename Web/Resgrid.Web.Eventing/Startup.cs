@@ -244,8 +244,27 @@ namespace Resgrid.Web.Eventing
 					options.AddAudiences(JwtConfig.EventsClientId);
 
 					options.UseIntrospection()
-						.SetClientId(JwtConfig.EventsClientId)
-						.SetClientSecret(JwtConfig.EventsClientSecret);
+						.SetClientId(JwtConfig.EventsClientId);
+
+					// Only send a secret when one is configured. SetClientSecret(null)
+					// throws ArgumentException, and it threw from ConfigureServices — so an
+					// install that had not set EventsClientSecret died during host build and
+					// the container crash-looped forever, taking the eventing hub down with
+					// it. A missing config value should not do that.
+					//
+					// This guard is necessary but NOT sufficient, which is worth knowing
+					// before trusting it: OpenIddict still rejects a secretless
+					// introspection request at runtime with "The client secret cannot be
+					// null or empty when using introspection". So a deployment must
+					// genuinely configure EventsClientSecret — skipping the call here only
+					// converts a fatal crash-loop into a clean per-request auth failure.
+					//
+					// The secret must be set on the API side by letting its Worker.cs
+					// register the client (IOpenIddictApplicationManager.CreateAsync hashes
+					// it); writing a plaintext value straight into OpenIddictApplications
+					// yields 401 invalid_client, because OpenIddict compares hashes.
+					if (!String.IsNullOrWhiteSpace(JwtConfig.EventsClientSecret))
+						options.SetClientSecret(JwtConfig.EventsClientSecret);
 
 					options.UseSystemNetHttp();
 
