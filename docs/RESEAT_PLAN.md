@@ -128,11 +128,11 @@ in `a575c8e9` because the image does not build without them:
 These rewrote large files that have changed substantially underneath. A
 cherry-pick produces something worse than re-applying the goal.
 
-- **Phase 3 (Stripe/billing removal).** Conflicts in
-  `Core/Resgrid.Services/SubscriptionsService.cs` (upstream 1537L → fork
-  343L), `LimitsService.cs` (299L → 64L), and
-  `Workers/Resgrid.Workers.Framework/Logic/PaymentQueueLogic.cs` — **which no
-  longer exists upstream at all**. Re-do by hand on the new base.
+- ~~**Phase 3 (Stripe/billing removal).**~~ — **SUPERSEDED 2026-09-28, see
+  §4.1.** Upstream now ships an open-source mode that the old Phase 3
+  predates, so the fork no longer removes billing. What survives from this
+  item is only the *goal* (an install needs no billing relationship), which
+  is now met by a 56-line change instead of a 1,343-line deletion.
 - **Phase 4 (SMTP email).** Conflicts in `EmailProviderModule.cs` and
   `PostmarkEmailSender.cs`. The MailKit `SmtpEmailSender` itself is new code
   and carries over cleanly; the conflict is only the registration and the
@@ -164,6 +164,39 @@ phase, and each should be its own commit with its own test.
 5. **CAD ingestion / dispatch-bridge integration.** New surface, in no
    existing commit — native hooks for the IaR/First Due capture pipeline
    instead of publishing purely through the v4 API.
+
+### 4.1 Billing: upstream already has an open-source mode (2026-09-28)
+
+The old Phase 3 assumed billing had to be *removed* to run self-hosted.
+That is no longer true. Upstream documents
+`SystemBehaviorConfig.BillingApiBaseUrl` as *"Do not set for Open-Source
+install"*, and every one of `SubscriptionsService`'s 52 methods gates on it
+being configured, falling back to the local free plan when it is blank. An
+unconfigured install already makes no billing calls and needs no
+credentials — which was most of Phase 3's purpose.
+
+What was actually broken is narrower: **the free plan is a cap.**
+`M0027_AddingFreeEntityLimits.cs` seeds `PlanId=1` with `LimitType=6 → 10`,
+so an open-source install behaved as if it had bought the smallest tier.
+Worse than a refusal, `UsersService`/`DepartmentsService` read the limit and
+truncate with `Take(limit.PersonnelLimit)`, so a 130-member department
+renders **10 people with no error** — Highway 58 would have silently shown a
+tenth of its roster.
+
+Fixed as `92aeef3e`, a 56-line change: treat "no billing relationship" as
+unlimited at `GetLimitsForEntityPlanWithFallbackAsync`, the one method every
+caller reads from, plus the seven gates that resolve a plan independently.
+Deliberately **not** a migration — a row cannot express "no plan applies",
+and it would fight upstream's seed migrations on every merge.
+
+**Consequences for the fork's scope list (§4):**
+
+- Item 4 ("billing/limit removal") is now **done and much smaller than
+  planned**. No Stripe/Paddle code or the `Stripe.net` package is removed;
+  it stays present but permanently unreachable without config. The
+  trade-off accepted deliberately: a smaller diff that survives upstream
+  merges, over a pruned tree that conflicts on every one.
+- Items 1 and 3 are unaffected. Items 2 and 5 unaffected.
 
 ---
 
