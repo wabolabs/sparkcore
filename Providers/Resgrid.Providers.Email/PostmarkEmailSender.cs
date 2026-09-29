@@ -16,8 +16,65 @@ namespace Resgrid.Providers.EmailProvider
 {
 	public class PostmarkEmailSender : IEmailSender
 	{
+		/// <summary>
+		/// Sends over SMTP using the configured host, port and TLS settings.
+		///
+		/// The class name is historical: SMTP is the default <see cref="OutboundEmailTypes"/> and the
+		/// Postmark API is only used when an operator selects it, so this is the path a self-hosted
+		/// install actually takes. It replaces three near-identical blocks that shared two bugs —
+		/// they ignored <c>Port</c> and <c>EnableSsl</c>, so only a plaintext port 25 relay worked,
+		/// and they swallowed the exception without logging it, so a misconfiguration produced a
+		/// silent failure with nothing in the logs to explain it.
+		/// </summary>
+		private static bool SendViaSmtp(MailMessage mail, string caller)
+		{
+			try
+			{
+				using (var smtpClient = new SmtpClient
+				{
+					DeliveryMethod = SmtpDeliveryMethod.Network,
+					Host = OutboundEmailServerConfig.Host,
+					Port = OutboundEmailServerConfig.Port,
+					EnableSsl = OutboundEmailServerConfig.EnableSsl
+				})
+				{
+					if (!String.IsNullOrWhiteSpace(OutboundEmailServerConfig.UserName) &&
+					    !String.IsNullOrWhiteSpace(OutboundEmailServerConfig.Password))
+					{
+						smtpClient.Credentials = new System.Net.NetworkCredential(
+							OutboundEmailServerConfig.UserName, OutboundEmailServerConfig.Password);
+					}
+
+					smtpClient.Send(mail);
+				}
+
+				return true;
+			}
+			catch (Exception ex)
+			{
+				// Never swallow this silently: the previous code did, which is why an install with a
+				// wrong port or TLS setting looked like it was working while sending nothing.
+				Logging.LogError(string.Format(
+					"Error from PostmarkEmailSender->{0} sending via SMTP {1}:{2} (SSL {3}) FromEmail:{4} ToEmail:{5}: {6}",
+					caller, OutboundEmailServerConfig.Host, OutboundEmailServerConfig.Port,
+					OutboundEmailServerConfig.EnableSsl, mail.From?.Address,
+					mail.To.FirstOrDefault()?.Address, ex));
+			}
+
+			return false;
+		}
+
 		public async Task<bool> SendEmail(MailMessage email)
 		{
+			// This method used to build a PostmarkClient unconditionally, ignoring
+			// OutboundEmailType entirely. Since SMTP is the default type, a correctly
+			// configured self-hosted install took the Postmark path with an empty API key,
+			// and every caller silently got false: password recovery, invitations, message
+			// notifications and the SMS text-command replies (EmailService and SmsService
+			// are the only callers). Route on the configured type like Send(Email) does.
+			if (SystemBehaviorConfig.OutboundEmailType != OutboundEmailTypes.Postmark)
+				return SendViaSmtp(email, "SendEmail");
+
 			try
 			{
 				var to = new StringBuilder();
@@ -114,72 +171,20 @@ namespace Resgrid.Providers.EmailProvider
 					}
 					else
 					{
-						try
-						{
-							using (var smtpClient = new SmtpClient
-							{
-								DeliveryMethod = SmtpDeliveryMethod.Network,
-								Host = Config.OutboundEmailServerConfig.Host
-							})
-							{
-								if (!String.IsNullOrWhiteSpace(OutboundEmailServerConfig.UserName) && !String.IsNullOrWhiteSpace(OutboundEmailServerConfig.Password))
-								{
-									smtpClient.Credentials = new System.Net.NetworkCredential(OutboundEmailServerConfig.UserName, OutboundEmailServerConfig.Password);
-								}
-
-								smtpClient.Send(mail);
-							}
-						}
-						catch (Exception ex)
-						{
-							Logging.LogException(ex);
-						}
+						// A Postmark message needs a From address; without one, fall back to SMTP.
+						return SendViaSmtp(mail, "Send");
 					}
 				}
-				else
-				{
-					try
-					{
-						using (var smtpClient = new SmtpClient
-						{
-							DeliveryMethod = SmtpDeliveryMethod.Network,
-							Host = OutboundEmailServerConfig.Host
-						})
-						{
-							if (!String.IsNullOrWhiteSpace(OutboundEmailServerConfig.UserName) && !String.IsNullOrWhiteSpace(OutboundEmailServerConfig.Password))
-							{
-								smtpClient.Credentials = new System.Net.NetworkCredential(OutboundEmailServerConfig.UserName, OutboundEmailServerConfig.Password);
-							}
 
-							smtpClient.Send(mail);
-						}
-					}
-					catch (Exception ex)
-					{
-						Logging.LogException(ex);
-					}
-				}
+				return SendViaSmtp(mail, "Send");
 			}
 			catch (PostmarkValidationException) { }
-			catch (Exception)
+			catch (Exception ex)
 			{
-				try
-				{
-					using (var smtpClient = new SmtpClient
-					{
-						DeliveryMethod = SmtpDeliveryMethod.Network,
-						Host = Config.OutboundEmailServerConfig.Host
-					})
-					{
-						smtpClient.Credentials = new System.Net.NetworkCredential(Config.OutboundEmailServerConfig.UserName, Config.OutboundEmailServerConfig.Password);
-						smtpClient.Send(mail);
-					}
-				}
-				catch (Exception ex)
-				{
-					if (!ex.ToString().Contains("You tried to send to a recipient that has been marked as inactive."))
-						Logging.LogException(ex);
-				}
+				// A Postmark failure should still attempt SMTP rather than dropping the mail,
+				// but the reason must reach the log — the old handler logged nothing at all.
+				Logging.LogException(ex);
+				return SendViaSmtp(mail, "Send");
 			}
 
 			return false;
