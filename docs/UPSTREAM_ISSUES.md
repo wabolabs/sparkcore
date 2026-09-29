@@ -85,7 +85,103 @@ sorting and forces every consumer to parse free text.
 
 ---
 
-## Draft 2 — (placeholder) MSSQL migration `ConstraintExists`
+## Draft 2 — images cannot be built without a paid Docker subscription
+
+**Title:** `All Dockerfiles base on the private dhi.io registry, so the repo cannot be built without a Docker subscription`
+
+**Labels:** `bug`, `build`, `docker`
+
+### Summary
+
+Every Dockerfile in the tree bases on `dhi.io/*`, Docker's hardened-images
+registry. That registry requires authentication against a paid Docker
+subscription. `docker pull` on any of those refs returns `unauthorized`, so
+neither `docker build` nor `docker compose build` can produce an image from a
+clean checkout. This affects contributors and self-hosters alike, and it is
+not gated behind any flag or opt-in.
+
+### Evidence
+
+Eight Dockerfiles reference it (10 refs total):
+
+```
+Web/Resgrid.Web.Broker/Dockerfile
+Web/Resgrid.Web.Eventing/Dockerfile
+Web/Resgrid.Web.Mcp/Dockerfile
+Web/Resgrid.Web.Services/Dockerfile
+Web/Resgrid.Web.Tts/Dockerfile
+Web/Resgrid.Web/Dockerfile
+Workers/Resgrid.TrackerGateway/Dockerfile
+Workers/Resgrid.Workers.Console/Dockerfile
+```
+
+The two refs are the same everywhere:
+
+```
+FROM dhi.io/aspnetcore:9.0.16-debian13@sha256:961647e80202ce33fc06472dda4e7ae2d2bc56d819aee6742602f70047b13dc7 AS base
+FROM dhi.io/dotnet:9.0.314-sdk-debian13@sha256:a3acd51de0af79878e26292b3053aab513c6ca4476ddb2f9f11adb9c04aa7c89 AS build
+```
+
+```
+$ docker pull dhi.io/aspnetcore:9.0.16-debian13
+Error response from daemon: Head "https://dhi.io/v2/aspnetcore/manifests/9.0.16-debian13": unauthorized: Unauthorized
+```
+
+### Why it is not a one-line swap
+
+The Dockerfiles are written *around* the properties of those images, so
+replacing the base means reviewing the code that compensates for it:
+
+- **Fake tzdata.** The DHI images mark `tzdata` as installed in `dpkg` while
+  shipping none of the zone files, so a plain `apt-get install tzdata` is a
+  silent no-op. Six of the Dockerfiles work around this with
+  `--reinstall` plus `test -f /usr/share/zoneinfo/...` assertions, and the
+  final stages copy `/usr/share/zoneinfo` in explicitly. Without the
+  workaround, `TimeZoneInfo`/`TZConvert` throw `TimeZoneNotFoundException` at
+  runtime — which means the workaround is load-bearing, not cosmetic.
+- **No shell.** Several Dockerfiles note "these hardened (distroless) images
+  have no shell, so we can't chain with `sh -c`", and
+  `Workers/Resgrid.TrackerGateway/Dockerfile` copies `/bin/dash` into the
+  final image specifically to have one. Any replacement base changes that
+  assumption.
+
+### Suggested change
+
+Base the public images on `mcr.microsoft.com/dotnet/aspnet:9.0` and
+`mcr.microsoft.com/dotnet/sdk:9.0`, which are public and require no
+credentials. A working reference exists on the fork (`wabolabs/sparkcore`,
+branch `sparkops/reseat`, commit `a575c8e9`) covering all eight Dockerfiles.
+
+If the hardened images are wanted for the *published* images specifically,
+the usual split is to keep `dhi.io` behind a build arg that defaults to MCR,
+so a source build works out of the box and only CI (which has the
+credentials) pulls the hardened refs.
+
+### Two unrelated failures this masks
+
+While proving the images build on MCR, two further defects surfaced in
+`Web/Resgrid.Web`. Neither is about the base image, but both mean the image
+does not build even once the registry problem is solved, so they are worth
+knowing before someone attempts this:
+
+- **The SPA build races MSBuild.** `Resgrid.Web.csproj`'s `BuildClientApps`
+  target runs `npm install` during publish, after which MSBuild immediately
+  execs the esbuild binary vite just downloaded — in the same uncommitted
+  overlayfs layer. Linux rejects that exec with `ETXTBSY`. Working around
+  that gets you `StaticWebAssets` compression failing instead with
+  `asset ... can not be found`, because it races the SPA output. The fix is
+  to build the SPA in its own committed layers and gate the MSBuild target
+  behind an env var (the fork uses `SKIP_NPM_BUILD=1`).
+- **`.dockerignore` does not exclude the host-built SPA output.**
+  `wwwroot/js/ng` and `Areas/User/Apps/dist` are gitignored but still travel
+  into the build context via `COPY . .`, and their stale chunk filenames
+  collide with the in-image build's output. This makes the failure
+  intermittent in a confusing way: a clean CI checkout builds, a developer
+  who ran a host build first does not.
+
+---
+
+## Draft 3 — (placeholder) MSSQL migration `ConstraintExists`
 
 Already filed as [#536](https://github.com/Resgrid/Core/issues/536). Left
 here only so the numbering is not reused.
