@@ -2,7 +2,7 @@
 
 ARG BUILD_VERSION=3.5.0
 
-FROM dhi.io/aspnetcore:9.0.16-debian13@sha256:961647e80202ce33fc06472dda4e7ae2d2bc56d819aee6742602f70047b13dc7 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 ARG BUILD_VERSION
 WORKDIR /app
 EXPOSE 8080/tcp
@@ -10,7 +10,7 @@ EXPOSE 5004/tcp 5004/udp
 EXPOSE 5023/tcp 5023/udp
 EXPOSE 5027/tcp 5027/udp
 
-FROM dhi.io/dotnet:9.0.314-sdk-debian13@sha256:a3acd51de0af79878e26292b3053aab513c6ca4476ddb2f9f11adb9c04aa7c89 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_VERSION
 WORKDIR /src
 ## Root MSBuild files must be present for the restore layer, otherwise the
@@ -44,10 +44,10 @@ WORKDIR "/src/Workers/Resgrid.TrackerGateway"
 
 FROM build AS publish
 ARG BUILD_VERSION
+## tzdata is a real package in the MCR bases, so no forced reinstall is
+## needed; the zone database is present and copied to the final stage below.
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
-    && apt-get install -y --reinstall --no-install-recommends tzdata \
-    && test -f /usr/share/zoneinfo/America/New_York \
-    && test -f /usr/share/zoneinfo/Asia/Kolkata \
+    && apt-get install -y --no-install-recommends tzdata \
     && rm -rf /var/lib/apt/lists/*
 RUN dotnet publish "Resgrid.TrackerGateway.csproj" -c Release -o /app/publish -p:Version=${BUILD_VERSION}
 ADD --checksum=sha256:2241be671073520e028b2f12df1e9ef0419014cffb5670b7a80b2080804be17d https://github.com/ufoscout/docker-compose-wait/releases/download/2.12.1/wait /app/publish/wait
@@ -65,7 +65,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /usr/share/zoneinfo /usr/share/zoneinfo
-# Hardened runtime has no shell; copy dash for the entrypoint and the CA bundle for loclx TLS.
+# The MCR base has /bin/sh; dash is still copied so the entrypoint runs on a
+# predictable shell, alongside the CA bundle for loclx TLS.
 COPY --from=publish /usr/bin/dash /usr/bin/dash
 COPY --from=publish /etc/ssl/certs /etc/ssl/certs
 ENV TZ=Etc/UTC

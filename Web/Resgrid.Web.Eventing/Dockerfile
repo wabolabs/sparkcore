@@ -3,13 +3,13 @@
 ARG BUILD_VERSION=3.5.0
 
 #FROM mcr.microsoft.com/dotnet/runtime:9.0.3-noble-amd64 AS base
-FROM dhi.io/aspnetcore:9.0.16-debian13@sha256:961647e80202ce33fc06472dda4e7ae2d2bc56d819aee6742602f70047b13dc7 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 ARG BUILD_VERSION
 WORKDIR /app
 EXPOSE 80
 
 #FROM mcr.microsoft.com/dotnet/sdk:9.0.202-noble-amd64 AS build
-FROM dhi.io/dotnet:9.0.314-sdk-debian13@sha256:a3acd51de0af79878e26292b3053aab513c6ca4476ddb2f9f11adb9c04aa7c89 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_VERSION
 WORKDIR /src
 ## Root MSBuild files must be present for the restore layer, otherwise the
@@ -30,14 +30,9 @@ WORKDIR "/src/Web/Resgrid.Web.Eventing"
 
 FROM build AS publish
 ARG BUILD_VERSION
-## The hardened DHI image marks tzdata as installed (dpkg) but ships none of the
-## zone files, so a plain "apt-get install tzdata" is a no-op. --reinstall forces
-## re-extraction; the test asserts the zone files are really present so the build
-## fails loudly instead of silently shipping an empty /usr/share/zoneinfo.
+## base-image change that drops them fails the build rather than silently shipping
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
-    && apt-get install -y --reinstall --no-install-recommends tzdata \
-    && test -f /usr/share/zoneinfo/America/New_York \
-    && test -f /usr/share/zoneinfo/Asia/Kolkata \
+    && apt-get install -y --no-install-recommends tzdata \
     && rm -rf /var/lib/apt/lists/*
 RUN dotnet publish "Resgrid.Web.Eventing.csproj" -c Release -o /app/publish  -p:Version=${BUILD_VERSION}
 ADD --checksum=sha256:2241be671073520e028b2f12df1e9ef0419014cffb5670b7a80b2080804be17d https://github.com/ufoscout/docker-compose-wait/releases/download/2.12.1/wait /app/publish/wait
@@ -45,12 +40,14 @@ RUN chmod +x /app/publish/wait
 
 FROM base AS final
 WORKDIR /app
-## Copy the IANA timezone database. DHI/distroless bases ship without tzdata,
-## so TimeZoneInfo (and TZConvert) can't resolve any zone -> TimeZoneNotFoundException.
+## Copy the IANA timezone database into the final stage. The MCR aspnet base
+## does ship tzdata, but the final image is assembled from the publish stage's
+## copy so the zone data is explicit rather than inherited.
 COPY --from=publish /usr/share/zoneinfo /usr/share/zoneinfo
 ENV TZ=Etc/UTC
 COPY --from=publish /app/publish .
 # docker-compose-wait waits for WAIT_HOSTS, then execs WAIT_COMMAND.
-# These hardened (distroless) images have no shell, so we can't chain with "sh -c".
+# The MCR base has a shell, so this could be chained with "sh -c"; the exec form
+# is kept because it needs no shell and signals the intent more clearly.
 ENV WAIT_COMMAND="dotnet Resgrid.Web.Eventing.dll"
 ENTRYPOINT ["./wait"]

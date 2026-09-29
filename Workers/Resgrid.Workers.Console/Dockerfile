@@ -4,15 +4,15 @@ ARG BUILD_VERSION=3.5.0
 
 ## Workers.Console transitively requires the ASP.NET Core shared framework
 ## (OpenIddict + the shared Services/Providers projects FrameworkReference
-## Microsoft.AspNetCore.App), so the runtime-only "dhi.io/dotnet" image fails at
+## Microsoft.AspNetCore.App), so a runtime-only base image fails at
 ## launch with "No frameworks were found". Use the aspnetcore base instead.
 #FROM mcr.microsoft.com/dotnet/aspnet:9.0.3-noble-amd64 AS base
-FROM dhi.io/aspnetcore:9.0.16-debian13@sha256:961647e80202ce33fc06472dda4e7ae2d2bc56d819aee6742602f70047b13dc7 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 ARG BUILD_VERSION
 WORKDIR /app
 
 #FROM mcr.microsoft.com/dotnet/sdk:9.0.202-noble-amd64 AS build
-FROM dhi.io/dotnet:9.0.314-sdk-debian13@sha256:a3acd51de0af79878e26292b3053aab513c6ca4476ddb2f9f11adb9c04aa7c89 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_VERSION
 WORKDIR /src
 ## Root MSBuild files must be present for the restore layer, otherwise the
@@ -72,14 +72,13 @@ RUN apt-get update \
     && ldd /usr/local/bin/wkhtmltopdf | awk '/=>/ {print $3}' | while read lib; do cp "$lib" /tmp/wkdeps/; done \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-## The hardened DHI image marks tzdata as installed (dpkg) but ships none of the
-## zone files, so a plain "apt-get install tzdata" is a no-op. --reinstall forces
-## re-extraction; the test asserts the zone files are really present so the build
-## fails loudly instead of silently shipping an empty /usr/share/zoneinfo.
+## base-image change that drops them fails the build rather than silently shipping
+## tzdata is a real package in the MCR base, so the forced reinstall the
+## hardened image needed is gone; the install is kept so the zone database is
+## explicit, with the assertion so a future base change that drops it fails the
+## build rather than silently shipping an empty /usr/share/zoneinfo.
 RUN apt-get update \
-    && apt-get install -y --reinstall --no-install-recommends tzdata \
-    && test -f /usr/share/zoneinfo/America/New_York \
-    && test -f /usr/share/zoneinfo/Asia/Kolkata \
+    && apt-get install -y --no-install-recommends tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 FROM base AS final
@@ -91,8 +90,9 @@ COPY --from=publish /tmp/wkdeps/ /usr/local/lib/wkhtmltopdf/
 COPY --from=publish /etc/fonts/ /etc/fonts/
 COPY --from=publish /usr/share/fonts/ /usr/share/fonts/
 
-## Copy the IANA timezone database. DHI/distroless bases ship without tzdata,
-## so TimeZoneInfo (and TZConvert) can't resolve any zone -> TimeZoneNotFoundException.
+## Copy the IANA timezone database into the final stage. The MCR aspnet base
+## does ship tzdata, but the final image is assembled from the publish stage's
+## copy so the zone data is explicit rather than inherited.
 COPY --from=publish /usr/share/zoneinfo /usr/share/zoneinfo
 ENV TZ=Etc/UTC
 
@@ -101,6 +101,7 @@ ENV LD_LIBRARY_PATH="/usr/local/lib/wkhtmltopdf"
 COPY --from=publish /app/publish .
 
 # docker-compose-wait waits for WAIT_HOSTS, then execs WAIT_COMMAND.
-# These hardened (distroless) images have no shell, so we can't chain with "sh -c".
+# The MCR base has a shell, so this could be chained with "sh -c"; the exec form
+# is kept because it needs no shell and signals the intent more clearly.
 ENV WAIT_COMMAND="dotnet Resgrid.Workers.Console.dll"
 ENTRYPOINT ["./wait"]

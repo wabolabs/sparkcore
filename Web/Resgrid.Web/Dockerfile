@@ -3,14 +3,14 @@
 ARG BUILD_VERSION=3.5.0
 
 #FROM mcr.microsoft.com/dotnet/aspnet:9.0.3-noble-amd64 AS base
-FROM dhi.io/aspnetcore:9.0.16-debian13@sha256:961647e80202ce33fc06472dda4e7ae2d2bc56d819aee6742602f70047b13dc7 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 ARG BUILD_VERSION
 WORKDIR /app
 EXPOSE 80
 
 #FROM node:18.19-alpine3.19 AS node_base
 #FROM mcr.microsoft.com/dotnet/sdk:9.0.202-noble-amd64 AS build
-FROM dhi.io/dotnet:9.0.314-sdk-debian13@sha256:a3acd51de0af79878e26292b3053aab513c6ca4476ddb2f9f11adb9c04aa7c89 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 #RUN apt-get update && apt-get install nodejs
 #COPY --from=node_base . .
 #COPY --from=node_base /usr/lib /usr/lib
@@ -20,13 +20,17 @@ FROM dhi.io/dotnet:9.0.314-sdk-debian13@sha256:a3acd51de0af79878e26292b3053aab51
 #COPY --from=node_base /usr/local/bin /usr/local/bin
 RUN apt-get update
 RUN apt-get install -y ca-certificates curl gnupg
-## The hardened DHI image marks tzdata as installed (dpkg) but ships none of the
-## zone files, so a plain "apt-get install tzdata" is a no-op. --reinstall forces
-## re-extraction; the test asserts the zone files are really present so the build
-## fails loudly instead of silently shipping an empty /usr/share/zoneinfo.
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --reinstall --no-install-recommends tzdata \
+## tzdata is a real package in the MCR base, so the forced reinstall the
+## hardened image needed is gone; the install is kept so the zone database is
+## explicit, with the assertion so a future base change that drops it fails the
+## build rather than silently shipping an empty /usr/share/zoneinfo.
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && apt-get install -y --no-install-recommends tzdata \
     && test -f /usr/share/zoneinfo/America/New_York \
-    && test -f /usr/share/zoneinfo/Asia/Kolkata
+    && test -f /usr/share/zoneinfo/Asia/Kolkata \
+    && rm -rf /var/lib/apt/lists/*
+## Node is required in the build stage: Resgrid.Web.csproj's BuildClientApps
+## target shells out to "npm install" and "npm run build" during publish.
 RUN curl -sL https://deb.nodesource.com/setup_20.x  | bash -
 RUN apt-get -y install nodejs
 ARG BUILD_VERSION
@@ -65,6 +69,32 @@ ENV PATH="${PATH}:/root/.dotnet/tools"
 # The csproj PrepublishScript is skipped when SKIP_LIBMAN_RESTORE=1 is set.
 RUN for i in 1 2 3; do libman restore && break || { echo "libman restore attempt $i failed, retrying..."; sleep 10; }; done
 ENV SKIP_LIBMAN_RESTORE=1
+
+## SPA build, in two layers, to avoid esbuild ETXTBSY on Docker overlayfs.
+## Doing it inside "dotnet publish" lets MSBuild run "npm install" and then
+## immediately exec the esbuild binary vite just downloaded, in the same
+## uncommitted layer — Linux rejects that exec, and separately the subsequent
+## StaticWebAssets compression step can run before the SPA output has settled,
+## which is the "asset can not be found" failure.
+##
+## Layer 1: npm ci --ignore-scripts fetches every package including the plain
+## @esbuild/linux-x64 binary, then that binary is pre-placed where vite looks
+## for it. Committing this layer puts it on stable storage.
+WORKDIR /src/Web/Resgrid.Web/Areas/User/Apps
+RUN npm ci --ignore-scripts \
+    && mkdir -p node_modules/vite/node_modules/esbuild/bin \
+    && cp node_modules/vite/node_modules/@esbuild/linux-x64/bin/esbuild \
+          node_modules/vite/node_modules/esbuild/bin/esbuild \
+    && chmod +x node_modules/vite/node_modules/esbuild/bin/esbuild
+## Layer 2: npm rebuild runs esbuild's install.js, which now finds the binary
+## already committed and only validates it — no write, no ETXTBSY.
+RUN npm rebuild
+RUN npm run build -- --mode production --outDir ./dist/core --emptyOutDir
+
+## Publish with the MSBuild npm targets skipped (SKIP_NPM_BUILD=1), since the
+## SPA was built above; BuildClientApps honours that flag.
+WORKDIR /src/Web/Resgrid.Web
+ENV SKIP_NPM_BUILD=1
 RUN dotnet publish "Resgrid.Web.csproj" -c Release -o /app/publish -p:Version=${BUILD_VERSION}
 ## Download the wait script in the build stage where a shell is available
 ADD --checksum=sha256:2241be671073520e028b2f12df1e9ef0419014cffb5670b7a80b2080804be17d https://github.com/ufoscout/docker-compose-wait/releases/download/2.12.1/wait /app/publish/wait
@@ -105,8 +135,9 @@ RUN apt-get update \
 
 FROM base AS final
 WORKDIR /app
-## Copy the IANA timezone database. DHI/distroless bases ship without tzdata,
-## so TimeZoneInfo (and TZConvert) can't resolve any zone -> TimeZoneNotFoundException.
+## Copy the IANA timezone database into the final stage. The MCR aspnet base
+## does ship tzdata, but the final image is assembled from the publish stage's
+## copy so the zone data is explicit rather than inherited.
 COPY --from=publish /usr/share/zoneinfo /usr/share/zoneinfo
 ENV TZ=Etc/UTC
 ## Copy wkhtmltopdf binary + runtime libraries + fonts from publish stage
@@ -114,10 +145,11 @@ COPY --from=publish /usr/local/bin/wkhtmltopdf /usr/local/bin/wkhtmltopdf
 COPY --from=publish /tmp/wkdeps/ /usr/local/lib/wkhtmltopdf/
 COPY --from=publish /etc/fonts/ /etc/fonts/
 COPY --from=publish /usr/share/fonts/ /usr/share/fonts/
-## Fail the build, not the first PDF request, if the binary can't load here (exec form: no shell).
+## Fail the build, not the first PDF request, if the binary can't load here (exec form).
 RUN ["/usr/local/bin/wkhtmltopdf", "--version"]
 COPY --from=publish /app/publish .
 # docker-compose-wait waits for WAIT_HOSTS, then execs WAIT_COMMAND.
-# These hardened (distroless) images have no shell, so we can't chain with "sh -c".
+# The MCR base has a shell, so this could be chained with "sh -c"; the exec form
+# is kept because it needs no shell and signals the intent more clearly.
 ENV WAIT_COMMAND="dotnet Resgrid.Web.dll"
 ENTRYPOINT ["./wait"]
