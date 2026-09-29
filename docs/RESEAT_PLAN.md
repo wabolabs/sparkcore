@@ -92,14 +92,36 @@ low risk.
 > Dockerfile was temporarily switched to `mcr.microsoft.com/dotnet/*:9.0`
 > bases, which built cleanly — so the substitution is known-good.
 
-- `d9a0802e` (esbuild ETXTBSY) — cherry-picks clean.
+- ~~`928395e3` (Dockerfiles)~~ — **DONE 2026-09-28**, as `a575c8e9`. All
+  eight Dockerfiles are on MCR. Applied as a fresh commit rather than a
+  cherry-pick, because upstream has added two Dockerfiles the fork never saw
+  (`Web/Resgrid.Web.Broker`, `Workers/Resgrid.TrackerGateway`) and the diff
+  conflicts across the rest. Two further defects had to be fixed to get a
+  build at all; see §3.1.
+- `d9a0802e` (esbuild ETXTBSY) — **folded into `a575c8e9`**, since the fix it
+  makes is a prerequisite for the Web image building. Its csproj half
+  (`SKIP_NPM_BUILD`) is in the same commit.
 - `e5660b7b` (compose/GHCR) — 1 conflict in `Docker/docker-compose.yml`:
   keep the fork's GHCR image refs, take upstream's service definitions.
-- `928395e3` (Dockerfiles) — 7 conflicts, but mechanical: upstream
-  restructured the Dockerfiles, so re-apply the base-image and entrypoint
-  intent rather than the literal diff. **Do this first — see the blocker
-  note above.**
 - `58c3f08f`, `18357b2b` (CI tweaks) — fold into the same workflow edit.
+
+### 3.1 Two defects found while making the images build
+
+Both fail `Web/Resgrid.Web` and neither is about the base-image swap. They are
+in `a575c8e9` because the image does not build without them:
+
+- **The SPA build races MSBuild.** `Resgrid.Web.csproj`'s `BuildClientApps`
+  target runs `npm install` during publish, after which MSBuild immediately
+  execs the esbuild binary vite just downloaded — in the same uncommitted
+  overlayfs layer. Linux rejects that exec (`ETXTBSY`); fix it, and the next
+  failure is `StaticWebAssets` compression racing the SPA output:
+  `asset ... can not be found`. Build the SPA in its own committed layers and
+  gate the MSBuild target behind `SKIP_NPM_BUILD=1`.
+- **`.dockerignore` ships the host's SPA output.** `wwwroot/js/ng` and
+  `Areas/User/Apps/dist` are gitignored but still travel via `COPY . .`, and
+  their stale chunk filenames collide with the in-image build's output. This
+  one only bites a developer who has run a host build first, which makes it a
+  nasty intermittent for anyone reproducing a CI failure locally.
 
 ### Group B — replay-by-intent (do not cherry-pick the diff)
 
