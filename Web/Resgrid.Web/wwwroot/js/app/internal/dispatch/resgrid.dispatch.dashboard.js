@@ -52,6 +52,7 @@ var resgrid;
                                 if (row.CanDeleteCall) {
                                     html += '<a class="btn btn-xs btn-danger" href="' + resgrid.absoluteBaseUrl + '/User/Dispatch/DeleteCall?callId=' + data + '">' + getText('delete', 'Delete') + '</a>';
                                 }
+                                html += ' <a class="btn btn-xs btn-default call-card-toggle" data-call-id="' + data + '">' + getText('details', 'Details') + '</a>';
                                 return html;
                             }
                         }
@@ -73,6 +74,25 @@ var resgrid;
                         },
                         { data: 'Timestamp', title: getText('timestamp', 'Timestamp') }
                     ]
+                });
+
+                // The incident card (A3): expand a row into time, type-ID, address,
+                // the units strip and the comment timeline.
+                $('#activeCallsList tbody').on('click', 'a.call-card-toggle', function (e) {
+                    e.preventDefault();
+                    var link = $(this);
+                    var row = activeCallsTable.row(link.closest('tr'));
+                    if (row.child.isShown()) {
+                        row.child.hide();
+                        return;
+                    }
+                    $.get(resgrid.absoluteBaseUrl + '/User/Dispatch/GetCallCard', { callId: link.data('call-id') }, function (card) {
+                        row.child(resgrid.dispatch.callcard.render(card, {
+                            units: getText('units', 'Units'),
+                            notes: getText('comments', 'Comments'),
+                            noNotes: getText('noComments', 'No comments yet.')
+                        })).show();
+                    });
                 });
             });
             function refreshCalls() {

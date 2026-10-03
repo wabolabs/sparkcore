@@ -2181,6 +2181,73 @@ namespace Resgrid.Web.Areas.User.Controllers
 				return Unauthorized();
 
 			call.Department = await _departmentsService.GetDepartmentByIdAsync(call.DepartmentId);
+			return Json(await BuildCallNotesAsync(call));
+		}
+
+		/// <summary>
+		/// The incident card's data (A3): time, type-ID, address, the units strip and
+		/// the comment timeline in one request, shaped for resgrid.dispatch.callcard.
+		/// The card is the DataTable child row the Details button expands.
+		/// </summary>
+		[HttpGet]
+		public async Task<IActionResult> GetCallCard(int callId)
+		{
+			var call = await _callsService.GetCallByIdAsync(callId);
+
+			if (call == null)
+				return new StatusCodeResult((int)HttpStatusCode.NotFound);
+
+			if (call.DepartmentId != DepartmentId)
+				return Unauthorized();
+
+			call.Department = await _departmentsService.GetDepartmentByIdAsync(call.DepartmentId);
+
+			// Units assigned to the call: the latest state per unit (the strip).
+			var unitStates = (await _unitsService.GetUnitStatesForCallAsync(DepartmentId, callId))
+				.GroupBy(x => x.UnitId)
+				.Select(g => g.OrderByDescending(x => x.Timestamp).First())
+				.ToList();
+			var departmentUnits = await _unitsService.GetUnitsForDepartmentAsync(DepartmentId);
+			var units = new List<object>();
+			foreach (var state in unitStates)
+			{
+				// The call-scoped query does not populate Unit; custom-state
+				// resolution needs it, and so does the name below.
+				var unit = state.Unit ?? departmentUnits.FirstOrDefault(x => x.UnitId == state.UnitId);
+				if (state.Unit == null && unit != null)
+					state.Unit = unit;
+
+				var status = await _customStateService.GetCustomUnitStateAsync(state);
+
+				units.Add(new
+				{
+					UnitId = state.UnitId,
+					Name = unit?.Name ?? "Unit " + state.UnitId,
+					State = status?.ButtonText ?? "Unknown",
+					StateColor = status?.ButtonColor ?? "label-default",
+					Timestamp = state.Timestamp.TimeConverterToString(call.Department)
+				});
+			}
+
+			return Json(new
+			{
+				CallId = call.CallId,
+				Number = call.Number,
+				Name = ProtectedDataEnvelope.SafeDisplay(call.Name),
+				Type = call.Type,
+				Nature = call.NatureOfCall,
+				Address = call.Address,
+				Priority = await DispatchDisplayHelper.GetLocalizedCallPriorityAsync(DepartmentId, call.Priority, _dispatchLocalizer),
+				Color = await _callsService.CallPriorityToColorAsync(call.Priority, DepartmentId),
+				LoggedOn = call.LoggedOn.TimeConverterToString(call.Department),
+				Units = units,
+				Notes = await BuildCallNotesAsync(call)
+			});
+		}
+
+		/// <summary>The comment timeline shared by the notes endpoint and the card.</summary>
+		private async Task<List<CallNoteJson>> BuildCallNotesAsync(Resgrid.Model.Call call)
+		{
 			call = await _callsService.PopulateCallData(call, false, false, true, false, false, false, false, false, false);
 			var personnelNames = await _departmentsService.GetAllPersonnelNamesForDepartmentAsync(DepartmentId);
 			var callNoteIds = call.CallNotes
@@ -2220,7 +2287,7 @@ namespace Resgrid.Web.Areas.User.Controllers
 				}
 			}
 
-			return Json(callNotes);
+			return callNotes;
 		}
 
 		[HttpGet]
