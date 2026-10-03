@@ -69,6 +69,7 @@ namespace Resgrid.Web.Areas.User.Controllers
 		private readonly IUdfRenderingService _udfRenderingService;
 		private readonly ICheckInTimerService _checkInTimerService;
 		private readonly IWeatherAlertService _weatherAlertService;
+		private readonly ICalendarService _calendarService;
 		private readonly ICallDispatchStatusService _callDispatchStatusService;
 		private readonly IModerationService _moderationService;
 		private readonly IStringLocalizer<Resgrid.Localization.Areas.User.Dispatch.Call> _dispatchLocalizer;
@@ -91,6 +92,7 @@ namespace Resgrid.Web.Areas.User.Controllers
 						IShiftsService shiftsService, IContactsService contactsService, IMappingService mappingService,
 			IUserDefinedFieldsService userDefinedFieldsService, IUdfRenderingService udfRenderingService,
 			ICheckInTimerService checkInTimerService, IWeatherAlertService weatherAlertService,
+			ICalendarService calendarService,
 			ICallDispatchStatusService callDispatchStatusService, IModerationService moderationService,
 			IStringLocalizer<Resgrid.Localization.Areas.User.Dispatch.Call> dispatchLocalizer, IStringLocalizer<Resgrid.Localization.Common> commonLocalizer,
 			IDispatchRecommendationService dispatchRecommendationService, IFeatureToggleService featureToggleService,
@@ -124,6 +126,7 @@ namespace Resgrid.Web.Areas.User.Controllers
 			_udfRenderingService = udfRenderingService;
 			_checkInTimerService = checkInTimerService;
 			_weatherAlertService = weatherAlertService;
+			_calendarService = calendarService;
 			_callDispatchStatusService = callDispatchStatusService;
 			_moderationService = moderationService;
 			_dispatchLocalizer = dispatchLocalizer;
@@ -235,6 +238,75 @@ namespace Resgrid.Web.Areas.User.Controllers
 		public async Task<IActionResult> NowRespondingPartial()
 		{
 			return PartialView("_NowRespondingPartial", await BuildNowRespondingAsync());
+		}
+
+		/// <summary>
+		/// The station strips (A5/A6): apparatus in/out of service, active weather
+		/// alerts and upcoming events, shaped for resgrid.dispatch.strips.
+		/// </summary>
+		[Authorize(Policy = ResgridResources.Call_View)]
+		public async Task<IActionResult> GetStationStrips()
+		{
+			// Apparatus: the latest state per unit. "Out of service" is only the
+			// explicit OutOfService state — custom states cannot be classified
+			// reliably, so they count as in service rather than being guessed at.
+			var unitStates = (await _unitsService.GetAllLatestStatusForUnitsByDepartmentIdAsync(DepartmentId))
+				?? new List<UnitState>();
+			var departmentUnits = await _unitsService.GetUnitsForDepartmentAsync(DepartmentId)
+				?? new List<Unit>();
+			var outOfService = new List<string>();
+			foreach (var state in unitStates)
+			{
+				var unit = state.Unit ?? departmentUnits.FirstOrDefault(x => x.UnitId == state.UnitId);
+				if (state.State == (int)UnitStateTypes.OutOfService)
+					outOfService.Add(unit?.Name ?? "Unit " + state.UnitId);
+			}
+			var apparatus = new
+			{
+				Total = unitStates.Count,
+				OutOfService = outOfService.Count,
+				InService = unitStates.Count - outOfService.Count,
+				OutOfServiceUnits = outOfService
+			};
+
+			// Weather: the department's active alerts, most severe first.
+			var alerts = (await _weatherAlertService.GetAlertsByDepartmentAndSeverityAsync(
+					DepartmentId, WeatherAlertSeverity.Minor))
+				?? new List<WeatherAlert>();
+			var weather = new
+			{
+				Alerts = alerts
+					.OrderBy(x => x.Severity)
+					.Take(3)
+					.Select(x => new
+					{
+						Event = x.Event,
+						Severity = ((WeatherAlertSeverity)x.Severity).ToString(),
+						Headline = x.Headline
+					})
+					.ToList()
+			};
+
+			// Events: the next few calendar items, department-local times.
+			var department = await _departmentsService.GetDepartmentByIdAsync(DepartmentId, false);
+			var items = (await _calendarService.GetUpcomingCalendarItemsAsync(DepartmentId, DateTime.UtcNow))
+				?? new List<CalendarItem>();
+			var events = new
+			{
+				Items = items
+					.OrderBy(x => x.Start)
+					.Take(3)
+					.Select(x => new
+					{
+						Title = x.Title,
+						Start = x.Start.TimeConverterToString(department),
+						End = x.End.TimeConverterToString(department),
+						AllDay = x.IsAllDay
+					})
+					.ToList()
+			};
+
+			return Json(new { Apparatus = apparatus, Weather = weather, Events = events });
 		}
 
 		[Authorize(Policy = ResgridResources.Call_View)]

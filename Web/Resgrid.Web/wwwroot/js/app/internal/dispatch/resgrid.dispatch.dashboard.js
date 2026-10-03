@@ -76,6 +76,11 @@ var resgrid;
                     ]
                 });
 
+                // The station strips (A5/A6) refresh on their own cadence: unit
+                // statuses and alerts do not fire call SignalR events.
+                refreshStrips();
+                setInterval(refreshStrips, 60000);
+
                 // The incident card (A3): expand a row into time, type-ID, address,
                 // the units strip and the comment timeline.
                 $('#activeCallsList tbody').on('click', 'a.call-card-toggle', function (e) {
@@ -100,6 +105,24 @@ var resgrid;
                 refreshNowResponding();
             }
             home.refreshCalls = refreshCalls;
+            function refreshStrips() {
+                if (!$("#apparatusStrip").length) {
+                    return;
+                }
+                $.get(resgrid.absoluteBaseUrl + '/User/Dispatch/GetStationStrips', function (data) {
+                    $("#apparatusStrip").html(resgrid.dispatch.strips.renderApparatus(data.Apparatus, {
+                        inService: getText('inService', 'in service'),
+                        outOfService: getText('outOfService', 'out of service')
+                    }));
+                    $("#weatherStrip").html(resgrid.dispatch.strips.renderWeather(data.Weather, {
+                        noAlerts: getText('noAlerts', 'No active alerts')
+                    }));
+                    $("#eventsStrip").html(resgrid.dispatch.strips.renderEvents(data.Events, {
+                        noEvents: getText('noEvents', 'No upcoming events')
+                    }));
+                });
+            }
+            home.refreshStrips = refreshStrips;
             function refreshNowResponding() {
                 var panel = $("#nowRespondingPanel");
                 if (panel.length) {

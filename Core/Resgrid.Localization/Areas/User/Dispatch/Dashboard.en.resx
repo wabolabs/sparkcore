@@ -159,4 +159,13 @@
   <data name="NowRespondingEta" xml:space="preserve">
     <value>ETA</value>
   </data>
+  <data name="ApparatusHeader" xml:space="preserve">
+    <value>Apparatus</value>
+  </data>
+  <data name="WeatherHeader" xml:space="preserve">
+    <value>Weather</value>
+  </data>
+  <data name="EventsHeader" xml:space="preserve">
+    <value>Events</value>
+  </data>
 </root>
