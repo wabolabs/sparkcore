@@ -59,6 +59,7 @@ namespace Resgrid.Web.Services.Controllers.v4
 		private readonly ICommunicationService _communicationService;
 		private readonly IWeatherAlertService _weatherAlertService;
 		private readonly ICallDispatchStatusService _callDispatchStatusService;
+		private readonly ICallRespondingService _callRespondingService;
 		private readonly IDispatchRecommendationService _dispatchRecommendationService;
 		private readonly IFeatureToggleService _featureToggleService;
 		private readonly IDepartmentDataProtectionService _dataProtectionService;
@@ -89,6 +90,7 @@ namespace Resgrid.Web.Services.Controllers.v4
 			ICommunicationService communicationService,
 			IWeatherAlertService weatherAlertService,
 			ICallDispatchStatusService callDispatchStatusService,
+			ICallRespondingService callRespondingService,
 			IDispatchRecommendationService dispatchRecommendationService,
 			IFeatureToggleService featureToggleService,
 			IDepartmentDataProtectionService dataProtectionService,
@@ -124,6 +126,7 @@ namespace Resgrid.Web.Services.Controllers.v4
 			_communicationService = communicationService;
 			_weatherAlertService = weatherAlertService;
 			_callDispatchStatusService = callDispatchStatusService;
+			_callRespondingService = callRespondingService;
 			_dispatchRecommendationService = dispatchRecommendationService;
 			_featureToggleService = featureToggleService;
 		}
@@ -537,6 +540,39 @@ namespace Resgrid.Web.Services.Controllers.v4
 		/// </summary>
 		/// <param name="callId">CallId to get data for</param>
 		/// <returns></returns>
+		/// <summary>
+		/// Who is currently responding to a call (A1): personnel and units whose
+		/// current status is tied to the call and means en-route or on-scene, plus
+		/// first arrival actual or projected. One call per request; the classification
+		/// matches the chatbot's "who's responding" answer.
+		/// </summary>
+		/// <param name="callId">CallId to get the responding snapshot for</param>
+		[HttpGet("{callId}/responding")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		public async Task<ActionResult<CallRespondingResult>> GetCallResponding(int callId)
+		{
+			var result = new CallRespondingResult();
+
+			var call = await _callsService.GetCallByIdAsync(callId);
+
+			if (call == null)
+			{
+				ResponseHelper.PopulateV4ResponseNotFound(result);
+				return Ok(result);
+			}
+
+			if (call.DepartmentId != DepartmentId)
+				return Unauthorized();
+
+			if (!await _authorizationService.CanUserViewCallAsync(UserId, callId))
+				return Unauthorized();
+
+			var snapshot = await _callRespondingService.GetRespondingForCallAsync(call.DepartmentId, callId);
+			result.Data = CallRespondingResultData.Convert(snapshot);
+
+			return Ok(result);
+		}
+
 		[HttpGet("GetCallExtraData")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<ActionResult<CallExtraDataResult>> GetCallExtraData(int callId)

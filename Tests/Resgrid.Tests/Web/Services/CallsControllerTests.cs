@@ -16,6 +16,7 @@ using Resgrid.Model.Events;
 using Resgrid.Model.Providers;
 using Resgrid.Model.Services;
 using Resgrid.Web.Services.Controllers.v4;
+using Resgrid.Web.Services.Helpers;
 using Resgrid.Web.Services.Models.v4.Calls;
 using Resgrid.Web.ServicesCore.Helpers;
 
@@ -36,6 +37,7 @@ namespace Resgrid.Tests.Web.Services
 		private Mock<IProtectedWriteService> _protectedWriteService;
 		private Mock<IDispatchScopeService> _dispatchScope;
 		private Mock<IMappingService> _mappingService;
+		private Mock<ICallRespondingService> _callRespondingService;
 		private CallsController _controller;
 		private Activity _activity;
 
@@ -71,6 +73,10 @@ namespace Resgrid.Tests.Web.Services
 
 			_dispatchScope = PassThroughDispatchScope();
 			_mappingService = new Mock<IMappingService>();
+			_callRespondingService = new Mock<ICallRespondingService>();
+			_callRespondingService
+				.Setup(x => x.GetRespondingForCallAsync(It.IsAny<int>(), It.IsAny<int>()))
+				.ReturnsAsync(new CallRespondingSnapshot());
 
 			var httpContext = new DefaultHttpContext
 			{
@@ -105,6 +111,7 @@ namespace Resgrid.Tests.Web.Services
 				Mock.Of<ICommunicationService>(),
 				Mock.Of<IWeatherAlertService>(),
 				Mock.Of<ICallDispatchStatusService>(),
+				_callRespondingService.Object,
 				Mock.Of<IDispatchRecommendationService>(),
 				Mock.Of<IFeatureToggleService>(),
 				_dataProtectionService.Object,
@@ -136,6 +143,67 @@ namespace Resgrid.Tests.Web.Services
 			_callsService.Verify(
 				service => service.GetCallByIdAsync(It.IsAny<int>(), It.IsAny<bool>()),
 				Times.Never);
+		}
+
+		[Test]
+		public async Task GetCallResponding_ReturnsNotFound_ForAnUnknownCall()
+		{
+			_callsService.Setup(x => x.GetCallByIdAsync(99, true)).ReturnsAsync((Call)null);
+
+			var response = await _controller.GetCallResponding(99);
+
+			var result = (response.Result as OkObjectResult)?.Value as CallRespondingResult;
+			result.Should().NotBeNull();
+			result.Status.Should().Be(ResponseHelper.NotFound);
+			_callRespondingService.Verify(
+				service => service.GetRespondingForCallAsync(It.IsAny<int>(), It.IsAny<int>()),
+				Times.Never);
+		}
+
+		[Test]
+		public async Task GetCallResponding_ReturnsTheSnapshot_ForAViewableCall()
+		{
+			_callsService.Setup(x => x.GetCallByIdAsync(12, true))
+				.ReturnsAsync(new Call { CallId = 12, DepartmentId = DepartmentId });
+			_authorizationService.Setup(x => x.CanUserViewCallAsync(UserId, 12)).ReturnsAsync(true);
+			_callRespondingService
+				.Setup(x => x.GetRespondingForCallAsync(DepartmentId, 12))
+				.ReturnsAsync(new CallRespondingSnapshot
+				{
+					CallId = 12,
+					FirstArrivalAt = new DateTime(2026, 1, 12, 15, 6, 0, DateTimeKind.Utc),
+					Personnel = new List<CallRespondingPerson>
+					{
+						new CallRespondingPerson
+						{
+							UserId = "user-a", Name = "Tammy Adams", StatusId = 2,
+							StatusText = "Responding", StatusColor = "#00aaff",
+							Timestamp = new DateTime(2026, 1, 12, 15, 1, 0, DateTimeKind.Utc),
+							Bucket = CallRespondingSnapshot.BucketEnRoute
+						}
+					},
+					Units = new List<CallRespondingUnit>
+					{
+						new CallRespondingUnit
+						{
+							UnitId = 2, Name = "Engine 1", StateId = 5, StateText = "Responding",
+							Timestamp = new DateTime(2026, 1, 12, 15, 2, 0, DateTimeKind.Utc),
+							Bucket = CallRespondingSnapshot.BucketEnRoute
+						}
+					}
+				});
+
+			var response = await _controller.GetCallResponding(12);
+
+			var result = (response.Result as OkObjectResult)?.Value as CallRespondingResult;
+			result.Should().NotBeNull();
+			result.Data.CallId.Should().Be("12");
+			result.Data.FirstArrivalAt.Should().Be(new DateTime(2026, 1, 12, 15, 6, 0, DateTimeKind.Utc));
+			result.Data.Personnel.Should().ContainSingle();
+			result.Data.Personnel[0].Name.Should().Be("Tammy Adams");
+			result.Data.Personnel[0].Bucket.Should().Be(CallRespondingSnapshot.BucketEnRoute);
+			result.Data.Units.Should().ContainSingle();
+			result.Data.Units[0].Name.Should().Be("Engine 1");
 		}
 
 		/// <summary>Group-scoped dispatch off: every call list comes back unchanged.</summary>
