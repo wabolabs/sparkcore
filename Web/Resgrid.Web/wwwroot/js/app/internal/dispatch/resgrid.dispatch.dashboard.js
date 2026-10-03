@@ -14,6 +14,11 @@ var resgrid;
                 resgrid.common.analytics.track('Dispatch Index');
                 resgrid.common.signalr.init(refreshCalls, refreshPersonnel, refreshPersonnel, refreshUnits);
 
+                // The responding panel is server-rendered; refresh it on the same
+                // SignalR call events and on a slow timer for status changes that
+                // never touch a call record.
+                setInterval(refreshNowResponding, 30000);
+
                 activeCallsTable = $("#activeCallsList").DataTable({
                     ajax: { url: resgrid.absoluteBaseUrl + '/User/Dispatch/GetActiveCallsList', dataSrc: '' },
                     pageLength: 50,
@@ -72,8 +77,18 @@ var resgrid;
             });
             function refreshCalls() {
                 if (activeCallsTable) { activeCallsTable.ajax.reload(); }
+                refreshNowResponding();
             }
             home.refreshCalls = refreshCalls;
+            function refreshNowResponding() {
+                var panel = $("#nowRespondingPanel");
+                if (panel.length) {
+                    $.get(resgrid.absoluteBaseUrl + '/User/Dispatch/NowRespondingPartial', function (html) {
+                        panel.html(html);
+                    });
+                }
+            }
+            home.refreshNowResponding = refreshNowResponding;
             function refreshUnits() {
                 if (unitsTable) { unitsTable.ajax.reload(); }
             }

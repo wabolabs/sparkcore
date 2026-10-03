@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
@@ -283,6 +284,53 @@ namespace Resgrid.Tests.Services
 			Assert.That(snapshot.FirstArrivalEta, Is.EqualTo(pulledOn.AddSeconds(300)));
 			Assert.That(snapshot.Personnel, Has.Count.EqualTo(2));
 			Assert.That(snapshot.Personnel[0].EtaAt, Is.EqualTo(pulledOn.AddSeconds(900)));
+		}
+
+		[Test]
+		public async Task GetRespondingForCallsAsync_fetches_the_department_lists_once_for_the_whole_batch()
+		{
+			var logA = new ActionLog
+			{
+				ActionLogId = 1, UserId = "user-a", DepartmentId = DepartmentId,
+				ActionTypeId = (int)ActionTypes.Responding, Timestamp = new DateTime(2026, 1, 12, 15, 1, 0, DateTimeKind.Utc),
+				DestinationId = 11, DestinationType = (int)DestinationEntityTypes.Call
+			};
+			var logB = new ActionLog
+			{
+				ActionLogId = 2, UserId = "user-b", DepartmentId = DepartmentId,
+				ActionTypeId = (int)ActionTypes.Responding, Timestamp = new DateTime(2026, 1, 12, 15, 2, 0, DateTimeKind.Utc),
+				DestinationId = 12, DestinationType = (int)DestinationEntityTypes.Call
+			};
+
+			_actionLogsService.Setup(x => x.GetActionLogsForCallAsync(DepartmentId, 11))
+				.ReturnsAsync(new List<ActionLog> { logA });
+			_actionLogsService.Setup(x => x.GetActionLogsForCallAsync(DepartmentId, 12))
+				.ReturnsAsync(new List<ActionLog> { logB });
+			_actionLogsService
+				.Setup(x => x.GetLastActionLogsForDepartmentAsync(DepartmentId, It.IsAny<bool>(),
+					It.IsAny<bool>(), It.IsAny<bool>()))
+				.ReturnsAsync(new List<ActionLog>
+				{
+					new ActionLog { ActionLogId = 1, UserId = "user-a", DestinationId = 11 },
+					new ActionLog { ActionLogId = 2, UserId = "user-b", DestinationId = 12 }
+				});
+
+			// The duplicate 11 exercises the dedupe.
+			var snapshots = await _service.GetRespondingForCallsAsync(DepartmentId, new[] { 11, 12, 11 });
+
+			Assert.That(snapshots, Has.Count.EqualTo(2));
+			Assert.That(snapshots[0].CallId, Is.EqualTo(11));
+			Assert.That(snapshots[0].Personnel.Single().UserId, Is.EqualTo("user-a"));
+			Assert.That(snapshots[1].CallId, Is.EqualTo(12));
+			Assert.That(snapshots[1].Personnel.Single().UserId, Is.EqualTo("user-b"));
+
+			_actionLogsService.Verify(
+				x => x.GetLastActionLogsForDepartmentAsync(DepartmentId, It.IsAny<bool>(), It.IsAny<bool>(),
+					It.IsAny<bool>()), Times.Once);
+			_unitsService.Verify(x => x.GetAllLatestStatusForUnitsByDepartmentIdAsync(DepartmentId), Times.Once);
+			_usersService.Verify(
+				x => x.GetUserGroupAndRolesByDepartmentIdAsync(DepartmentId, It.IsAny<bool>(), It.IsAny<bool>(),
+					It.IsAny<bool>()), Times.Once);
 		}
 
 		[Test]

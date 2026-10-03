@@ -76,6 +76,7 @@ namespace Resgrid.Web.Areas.User.Controllers
 		private readonly IDispatchRecommendationService _dispatchRecommendationService;
 		private readonly IDispatchScopeService _dispatchScopeService;
 		private readonly INearestUnitService _nearestUnitService;
+		private readonly ICallRespondingService _callRespondingService;
 		private readonly IFeatureToggleService _featureToggleService;
 		private readonly IProtectedReadService _protectedReadService;
 		private readonly IRecordsCutoverService _recordsCutoverService;
@@ -94,7 +95,8 @@ namespace Resgrid.Web.Areas.User.Controllers
 			IStringLocalizer<Resgrid.Localization.Areas.User.Dispatch.Call> dispatchLocalizer, IStringLocalizer<Resgrid.Localization.Common> commonLocalizer,
 			IDispatchRecommendationService dispatchRecommendationService, IFeatureToggleService featureToggleService,
 			IProtectedReadService protectedReadService, IRecordsCutoverService recordsCutoverService, IRecordsProtectionService recordsProtection,
-			IDispatchScopeService dispatchScopeService, INearestUnitService nearestUnitService)
+			IDispatchScopeService dispatchScopeService, INearestUnitService nearestUnitService,
+			ICallRespondingService callRespondingService)
 		{
 			_departmentsService = departmentsService;
 			_usersService = usersService;
@@ -129,6 +131,7 @@ namespace Resgrid.Web.Areas.User.Controllers
 			_dispatchRecommendationService = dispatchRecommendationService;
 			_dispatchScopeService = dispatchScopeService;
 			_nearestUnitService = nearestUnitService;
+			_callRespondingService = callRespondingService;
 			_featureToggleService = featureToggleService;
 			_protectedReadService = protectedReadService;
 			_recordsCutoverService = recordsCutoverService;
@@ -181,8 +184,57 @@ namespace Resgrid.Web.Areas.User.Controllers
 			}
 
 			model.NewCall = new Resgrid.Model.Call();
+			model.NowResponding = await BuildNowRespondingAsync();
 
 			return View(model);
+		}
+
+		/// <summary>
+		/// Who is currently responding, per active call (A2), scoped like the
+		/// active-calls list. Built from ICallRespondingService — the same logic the
+		/// v4 responding endpoint exposes to external clients — in one batch so the
+		/// department-wide lookups run once.
+		/// </summary>
+		private async Task<List<NowRespondingCall>> BuildNowRespondingAsync()
+		{
+			var calls = (await _dispatchScopeService.FilterCallsForUserAsync(DepartmentId, UserId,
+					await _callsService.GetActiveCallsByDepartmentAsync(DepartmentId)))
+				.Where(x => !x.DispatchOn.HasValue || x.DispatchOn.Value <= DateTime.UtcNow || x.HasBeenDispatched == true)
+				.OrderByDescending(x => x.LoggedOn)
+				.ToList();
+
+			if (calls.Count == 0)
+				return new List<NowRespondingCall>();
+
+			var snapshots = await _callRespondingService.GetRespondingForCallsAsync(
+				DepartmentId, calls.Select(x => x.CallId));
+			var department = await _departmentsService.GetDepartmentByIdAsync(DepartmentId, false);
+
+			var responding = new List<NowRespondingCall>();
+			foreach (var call in calls)
+			{
+				var snapshot = snapshots.FirstOrDefault(x => x.CallId == call.CallId);
+				if (snapshot == null || (snapshot.Personnel.Count == 0 && snapshot.Units.Count == 0))
+					continue; // only calls with someone actually responding
+
+				var item = new NowRespondingCall { Call = call, Responding = snapshot };
+
+				if (snapshot.FirstArrivalAt.HasValue)
+					item.FirstArrivalText = snapshot.FirstArrivalAt.Value.TimeConverterToString(department);
+				else if (snapshot.FirstArrivalEta.HasValue)
+					item.EtaText = snapshot.FirstArrivalEta.Value.TimeConverterToString(department);
+
+				responding.Add(item);
+			}
+
+			return responding;
+		}
+
+		/// <summary>The Now Responding panel, refreshed in place by the dashboard JS.</summary>
+		[Authorize(Policy = ResgridResources.Call_View)]
+		public async Task<IActionResult> NowRespondingPartial()
+		{
+			return PartialView("_NowRespondingPartial", await BuildNowRespondingAsync());
 		}
 
 		[Authorize(Policy = ResgridResources.Call_View)]

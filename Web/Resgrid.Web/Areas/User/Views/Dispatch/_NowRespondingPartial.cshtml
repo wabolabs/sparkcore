@@ -1,0 +1,85 @@
+@model List<Resgrid.Web.Areas.User.Models.NowRespondingCall>
+@using Resgrid.Model
+@inject IStringLocalizer<Resgrid.Localization.Areas.User.Dispatch.Dashboard> localizer
+@{
+  // Custom-state "colors" arrive in two forms: a hex value (custom states) or a
+  // CSS class like `label-success` (the defaults). Using one as the other is a
+  // silent failure — white text on white — so both are handled explicitly.
+  Func<string, string> chipClass = color =>
+    string.IsNullOrWhiteSpace(color) || color.StartsWith("#")
+      ? "now-responding-chip"
+      : "now-responding-chip " + color;
+  Func<string, string> chipStyle = color =>
+    !string.IsNullOrWhiteSpace(color) && color.StartsWith("#")
+      ? $"background-color:{color};"
+      : "";
+}
+
+@if (Model == null || Model.Count == 0)
+{
+  <p class="text-muted now-responding-empty">@localizer["NowRespondingNone"]</p>
+}
+else
+{
+  <style>
+    .now-responding-call { padding: 8px 0; border-bottom: 1px solid #e7eaec; }
+    .now-responding-call:last-child { border-bottom: none; }
+    .now-responding-call-head { margin-bottom: 4px; }
+    .now-responding-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #999; margin-right: 6px; }
+    .now-responding-chip { display: inline-block; background-color: #777; color: #fff; padding: 2px 6px; border-radius: 3px; margin: 0 4px 2px 0; font-size: 12px; }
+    .now-responding-times { font-size: 12px; margin-top: 2px; }
+  </style>
+
+  foreach (var item in Model)
+  {
+    <div class="now-responding-call">
+      <div class="now-responding-call-head">
+        <strong>@item.Call.Number</strong>
+        @if (!string.IsNullOrWhiteSpace(item.Call.Name))
+        {
+          <span>@ProtectedDataEnvelope.SafeDisplay(item.Call.Name)</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(item.Call.Address))
+        {
+          <span class="text-muted">@item.Call.Address</span>
+        }
+      </div>
+
+      @if (item.Responding.Personnel.Count > 0)
+      {
+        <div>
+          <span class="now-responding-label">@localizer["NowRespondingPersonnel"]</span>
+          @foreach (var person in item.Responding.Personnel)
+          {
+            <span class="@chipClass(person.StatusColor)" style="@chipStyle(person.StatusColor)">@person.Name — @person.StatusText</span>
+          }
+        </div>
+      }
+
+      @if (item.Responding.Units.Count > 0)
+      {
+        <div>
+          <span class="now-responding-label">@localizer["NowRespondingUnits"]</span>
+          @foreach (var unit in item.Responding.Units)
+          {
+            <span class="@chipClass(unit.StateColor)" style="@chipStyle(unit.StateColor)">@unit.Name — @unit.StateText</span>
+          }
+        </div>
+      }
+
+      @if (!string.IsNullOrWhiteSpace(item.FirstArrivalText) || !string.IsNullOrWhiteSpace(item.EtaText))
+      {
+        <div class="text-muted now-responding-times">
+          @if (!string.IsNullOrWhiteSpace(item.FirstArrivalText))
+          {
+            <span>@localizer["NowRespondingArrived"]: @item.FirstArrivalText</span>
+          }
+          else if (!string.IsNullOrWhiteSpace(item.EtaText))
+          {
+            <span>@localizer["NowRespondingEta"]: @item.EtaText</span>
+          }
+        </div>
+      }
+    </div>
+  }
+}

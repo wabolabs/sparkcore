@@ -46,31 +46,63 @@ namespace Resgrid.Services
 
 		public async Task<CallRespondingSnapshot> GetRespondingForCallAsync(int departmentId, int callId)
 		{
-			var snapshot = new CallRespondingSnapshot { CallId = callId };
+			var snapshots = await GetRespondingForCallsAsync(departmentId, new[] { callId });
+			return snapshots.Count > 0 ? snapshots[0] : new CallRespondingSnapshot { CallId = callId };
+		}
 
-			// One fetch per source for the whole snapshot (the plan's "one query per
-			// active call"): the history is used for both the current-status lists and
-			// the first-arrival calculation.
-			var callLogs = await _actionLogsService.GetActionLogsForCallAsync(departmentId, callId)
+		public async Task<List<CallRespondingSnapshot>> GetRespondingForCallsAsync(int departmentId,
+			IEnumerable<int> callIds)
+		{
+			var ids = (callIds ?? Enumerable.Empty<int>()).Distinct().ToList();
+			var results = new List<CallRespondingSnapshot>();
+			if (ids.Count == 0)
+				return results;
+
+			// The department-wide "current" lists are fetched once for the whole
+			// batch: the dashboard asks for every active call, and re-fetching
+			// these per call is the expensive part (GetLastActionLogsForDepartment
+			// bypasses its cache by design).
+			var currentLogs = await _actionLogsService.GetLastActionLogsForDepartmentAsync(departmentId)
 				?? new List<ActionLog>();
-			var callStates = await _unitsService.GetUnitStatesForCallAsync(departmentId, callId)
+			var currentUnitStates = await _unitsService.GetAllLatestStatusForUnitsByDepartmentIdAsync(departmentId)
 				?? new List<UnitState>();
+			var users = await _usersService.GetUserGroupAndRolesByDepartmentIdAsync(departmentId, true, true, true)
+				?? new List<UserGroupRole>();
+			var staffingStates = await _userStateService.GetLatestStatesForDepartmentAsync(departmentId)
+				?? new List<UserState>();
+			var units = await _unitsService.GetUnitsForDepartmentAsync(departmentId) ?? new List<Unit>();
+			var groups = await _departmentGroupsService.GetAllGroupsForDepartmentAsync(departmentId)
+				?? new List<DepartmentGroup>();
 
-			await AddPersonnelAsync(snapshot, departmentId, callId, callLogs);
-			await AddUnitsAsync(snapshot, departmentId, callId, callStates);
-			await SetFirstArrivalAsync(snapshot, departmentId, callLogs, callStates);
+			foreach (var callId in ids)
+			{
+				var snapshot = new CallRespondingSnapshot { CallId = callId };
 
-			return snapshot;
+				// One fetch per call-scoped source; the history feeds both the
+				// current-status lists and the first-arrival calculation.
+				var callLogs = await _actionLogsService.GetActionLogsForCallAsync(departmentId, callId)
+					?? new List<ActionLog>();
+				var callStates = await _unitsService.GetUnitStatesForCallAsync(departmentId, callId)
+					?? new List<UnitState>();
+
+				await AddPersonnelAsync(snapshot, departmentId, callId, callLogs, currentLogs, users,
+					staffingStates);
+				await AddUnitsAsync(snapshot, departmentId, callId, callStates, currentUnitStates, units, groups);
+				await SetFirstArrivalAsync(snapshot, departmentId, callLogs, callStates);
+
+				results.Add(snapshot);
+			}
+
+			return results;
 		}
 
 		private async Task AddPersonnelAsync(CallRespondingSnapshot snapshot, int departmentId, int callId,
-			List<ActionLog> callLogs)
+			List<ActionLog> callLogs, List<ActionLog> currentLogs, List<UserGroupRole> users,
+			List<UserState> staffingStates)
 		{
 			if (callLogs.Count == 0)
 				return;
 
-			var currentLogs = await _actionLogsService.GetLastActionLogsForDepartmentAsync(departmentId)
-				?? new List<ActionLog>();
 			var currentIds = new HashSet<int>(currentLogs
 				.Where(x => x.DestinationId == callId)
 				.Select(x => x.ActionLogId));
@@ -78,11 +110,6 @@ namespace Resgrid.Services
 			var responding = callLogs.Where(x => currentIds.Contains(x.ActionLogId)).ToList();
 			if (responding.Count == 0)
 				return;
-
-			var users = await _usersService.GetUserGroupAndRolesByDepartmentIdAsync(departmentId, true, true, true)
-				?? new List<UserGroupRole>();
-			var staffingStates = await _userStateService.GetLatestStatesForDepartmentAsync(departmentId)
-				?? new List<UserState>();
 
 			foreach (var log in responding)
 			{
@@ -124,24 +151,19 @@ namespace Resgrid.Services
 		}
 
 		private async Task AddUnitsAsync(CallRespondingSnapshot snapshot, int departmentId, int callId,
-			List<UnitState> callStates)
+			List<UnitState> callStates, List<UnitState> currentUnitStates, List<Unit> units,
+			List<DepartmentGroup> groups)
 		{
 			if (callStates.Count == 0)
 				return;
 
-			var currentStates = await _unitsService.GetAllLatestStatusForUnitsByDepartmentIdAsync(departmentId)
-				?? new List<UnitState>();
-			var currentIds = new HashSet<int>(currentStates
+			var currentIds = new HashSet<int>(currentUnitStates
 				.Where(x => x.DestinationId == callId)
 				.Select(x => x.UnitStateId));
 
 			var responding = callStates.Where(x => currentIds.Contains(x.UnitStateId)).ToList();
 			if (responding.Count == 0)
 				return;
-
-			var units = await _unitsService.GetUnitsForDepartmentAsync(departmentId) ?? new List<Unit>();
-			var groups = await _departmentGroupsService.GetAllGroupsForDepartmentAsync(departmentId)
-				?? new List<DepartmentGroup>();
 
 			foreach (var state in responding)
 			{
