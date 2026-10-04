@@ -28,7 +28,7 @@ namespace Resgrid.Services
 	public class CallTtsAnnouncementService : ICallTtsAnnouncementService
 	{
 		/// <summary>The per-department opt-in key (feature flags).</summary>
-		public const string FeatureKey = "calls.tts_announcement";
+		public const string FeatureKey = FeatureFlagKeys.CallTtsAnnouncement;
 
 		private readonly ILifetimeScope _lifetimeScope;
 

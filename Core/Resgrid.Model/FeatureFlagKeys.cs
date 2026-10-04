@@ -144,5 +144,8 @@ namespace Resgrid.Model
 
 		/// <summary>Workforce &amp; Business Operations plan Phase E: the California CRD pay data report wizard and demographic self-identification. Child of Business.Operations; also requires the department's Advanced Data Protection state to be Enabled. Seeded off by M0224.</summary>
 		public const string CaliforniaPayDataReporting = "Compliance.CaliforniaPayDataReporting";
+
+		/// <summary>Spoken call alert (A7): on call creation, the dispatch announcement (nature, address, units) is synthesized and attached to the call as audio. Seeded off by M0243.</summary>
+		public const string CallTtsAnnouncement = "Calls.TtsAnnouncement";
 	}
 }
