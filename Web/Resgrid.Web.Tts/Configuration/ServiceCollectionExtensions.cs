@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Resgrid.Config;
 
@@ -9,13 +10,20 @@ namespace Resgrid.Web.Tts.Configuration
 
 		public static IServiceCollection AddTtsConfiguration(this IServiceCollection services)
 		{
-			services.AddOptions<S3StorageOptions>()
-				.Configure(ApplyS3Options)
-				.ValidateDataAnnotations()
-				.Validate(options => !string.IsNullOrWhiteSpace(options.AccessKey), "S3 access key is required.")
-				.Validate(options => !string.IsNullOrWhiteSpace(options.SecretKey), "S3 secret key is required.")
-				.Validate(options => !string.IsNullOrWhiteSpace(options.Bucket), "S3 bucket is required.")
-				.ValidateOnStart();
+			// S3 options are only registered (and validated at startup) when S3 is
+			// the storage backend. ValidateOnStart is unconditional otherwise, and
+			// a self-hosted filesystem deployment has no S3 credentials to give —
+			// it would crash-loop before serving a single request.
+			if (!string.Equals(TtsConfig.StorageMode, "filesystem", StringComparison.OrdinalIgnoreCase))
+			{
+				services.AddOptions<S3StorageOptions>()
+					.Configure(ApplyS3Options)
+					.ValidateDataAnnotations()
+					.Validate(options => !string.IsNullOrWhiteSpace(options.AccessKey), "S3 access key is required.")
+					.Validate(options => !string.IsNullOrWhiteSpace(options.SecretKey), "S3 secret key is required.")
+					.Validate(options => !string.IsNullOrWhiteSpace(options.Bucket), "S3 bucket is required.")
+					.ValidateOnStart();
+			}
 
 			services.AddOptions<TtsOptions>()
 				.Configure(ApplyTtsOptions)

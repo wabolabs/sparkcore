@@ -25,6 +25,16 @@ namespace Resgrid.Config
 		public static string S3PublicBaseUrl = "";
 
 		/// <summary>
+		/// Storage backend for generated audio: "s3" (default, upstream's) or
+		/// "filesystem" — the self-hosted mode, so a deployment without S3 can
+		/// run the service. Selected with RESGRID:TtsConfig:StorageMode.
+		/// </summary>
+		public static string StorageMode = "s3";
+
+		/// <summary>Root directory for the filesystem storage mode. Empty = a temp directory.</summary>
+		public static string FileStoragePath = "";
+
+		/// <summary>
 		/// When true, voice webhooks degrade to Twilio's native &lt;Say&gt; verb (billed per
 		/// use by Twilio) if TTS audio can't be produced in time or generation fails.
 		/// Default off: an unavailable prompt is skipped so a TTS outage surfaces as

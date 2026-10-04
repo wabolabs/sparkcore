@@ -36,9 +36,12 @@ namespace Resgrid.Services
 		{
 			_lifetimeScope = lifetimeScope;
 
-			// Fire-and-forget as the other listeners do; each event runs in its own
-			// child scope so it does not share a unit of work with the publisher.
-			eventAggregator.AddAsyncListener<CallAddedEvent>(message => _ = AnnounceFromEventAsync(message));
+			// AddListener, not AddAsyncListener: call creation publishes through
+			// SendMessage (the synchronous hub), which never invokes the async
+			// listener set — the same reason CoreEventService uses this pattern.
+			// The work is fire-and-forget; each event runs in its own child scope
+			// so it does not share a unit of work with the publisher.
+			eventAggregator.AddListener<CallAddedEvent>(message => _ = AnnounceFromEventAsync(message));
 		}
 
 		private async Task AnnounceFromEventAsync(CallAddedEvent message)

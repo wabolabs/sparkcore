@@ -109,7 +109,10 @@ builder.Services.AddRateLimiter(options =>
 	};
 });
 
-builder.Services.AddSingleton<IStorageService, S3StorageService>();
+if (string.Equals(TtsConfig.StorageMode, "filesystem", StringComparison.OrdinalIgnoreCase))
+	builder.Services.AddSingleton<IStorageService, FileSystemStorageService>();
+else
+	builder.Services.AddSingleton<IStorageService, S3StorageService>();
 builder.Services.AddSingleton<IPiperWorkerFactory, PiperWorkerFactory>();
 builder.Services.AddSingleton<IPiperProcessPool, PiperProcessPool>();
 builder.Services.AddSingleton<ITextPreprocessor, TextPreprocessor>();
