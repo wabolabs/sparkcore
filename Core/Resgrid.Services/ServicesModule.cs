@@ -146,6 +146,8 @@ namespace Resgrid.Services
 			builder.RegisterType<ModerationService>().As<IModerationService>().InstancePerLifetimeScope();
 			builder.RegisterType<ChatNotificationService>().As<IChatNotificationService>().InstancePerLifetimeScope();
 			builder.RegisterType<ChatProvisioningEventService>().As<IChatProvisioningEventService>().SingleInstance().AutoActivate();
+			builder.RegisterType<HttpCallTtsAudioFetcher>().As<ICallTtsAudioFetcher>().SingleInstance();
+			builder.RegisterType<CallTtsAnnouncementService>().As<ICallTtsAnnouncementService>().SingleInstance().AutoActivate();
 			builder.RegisterType<IncidentCommandNotificationService>().As<IIncidentCommandNotificationService>().InstancePerLifetimeScope();
 			builder.RegisterType<IncidentVoiceService>().As<IIncidentVoiceService>().InstancePerLifetimeScope();
 			builder.RegisterType<MutualAidService>().As<IMutualAidService>().InstancePerLifetimeScope();
