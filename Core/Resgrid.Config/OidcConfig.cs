@@ -30,6 +30,18 @@ namespace Resgrid.Config
 		public static string EncryptionCert = "";
 
 		public static string SigningCert = "";
+
+		/// <summary>
+		/// Pins the token issuer (SparkOps fork). Empty keeps upstream behaviour: the
+		/// issuer follows the host each request arrived on (forced to https by the API's
+		/// scheme middleware), so a token minted through one address is reported
+		/// inactive when introspected through another. Set this when clients reach the
+		/// API by more than one address (loopback, a tailnet IP, a DNS name). The events
+		/// service then validates against this issuer with a static configuration whose
+		/// introspection endpoint is SystemBehaviorConfig.ResgridApiBaseUrl, instead of
+		/// discovering one (discovery advertises https endpoints even on a plain-HTTP API).
+		/// </summary>
+		public static string Issuer = "";
 	}
 }
 

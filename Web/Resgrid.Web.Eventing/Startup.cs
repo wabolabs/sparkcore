@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OpenIddict.Abstractions;
 using Resgrid.Config;
 using Resgrid.Providers.Claims;
 using Resgrid.Repositories.DataRepository.Stores;
@@ -245,7 +246,24 @@ namespace Resgrid.Web.Eventing
 					// Import the configuration from the local OpenIddict server instance.
 					//options.UseLocalServer();
 
-					options.SetIssuer(SystemBehaviorConfig.ResgridApiBaseUrl);
+					if (String.IsNullOrWhiteSpace(OidcConfig.Issuer))
+					{
+						options.SetIssuer(SystemBehaviorConfig.ResgridApiBaseUrl);
+					}
+					else
+					{
+						// SparkOps fork: the API pins its issuer (OidcConfig.Issuer), but its
+						// discovery document still builds endpoint URIs from the request with
+						// the scheme forced to https, so on a plain-HTTP API the advertised
+						// introspection endpoint is unreachable. Skip discovery and say where
+						// introspection lives.
+						options.SetIssuer(OidcConfig.Issuer);
+						options.Configure(o => o.Configuration = new OpenIddictConfiguration
+						{
+							Issuer = new Uri(OidcConfig.Issuer),
+							IntrospectionEndpoint = new Uri(SystemBehaviorConfig.ResgridApiBaseUrl.TrimEnd('/') + "/api/v4/connect/introspect")
+						});
+					}
 					options.AddAudiences(JwtConfig.EventsClientId);
 
 					options.UseIntrospection()

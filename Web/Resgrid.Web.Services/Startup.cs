@@ -562,6 +562,10 @@ namespace Resgrid.Web.ServicesCore
 					Resgrid.Web.Services.Helpers.ResgridTokenEndpoints.UseResgridTokenEndpoints(options);
 					options.SetIntrospectionEndpointUris("/api/v4/connect/introspect");
 
+					// SparkOps fork: one issuer however the API is reached (see OidcConfig.Issuer).
+					if (!String.IsNullOrWhiteSpace(OidcConfig.Issuer))
+						options.SetIssuer(new Uri(OidcConfig.Issuer));
+
 					options.SetAccessTokenLifetime(TimeSpan.FromMinutes(OidcConfig.AccessTokenExpiryMinutes));
 					options.SetRefreshTokenLifetime(TimeSpan.FromDays(OidcConfig.RefreshTokenExpiryDays));
 
