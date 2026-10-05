@@ -327,6 +327,22 @@ backup at `/storage/hwy58vfd/resgrid/docker-compose.pre-pilot.bak`.
 
 ---
 
+## 5a. Fork migrations are numbered 9001 and up (2026-10-04)
+
+The A7 feature flag shipped as `M0243`, the next free number at the time.
+Upstream then shipped its own `M0243`–`M0259` (MFA, passkeys, brokered SSO,
+...), and FluentMigrator refuses two migrations with one version. So fork
+migrations take **9001, 9002, ...**, a range upstream will not reach, and the
+flag is now `M9001_AddCallTtsAnnouncementFeatureFlag` (both the MSSQL and the
+Pg set).
+
+This is safe because `MigrateUp()` applies **every** unapplied migration in
+ascending order, not only those above the highest applied. That was checked
+with FluentMigrator 7.0.0: a 260 that arrived after 9001 was applied still ran.
+No environment ever recorded the fork's 243. On bravo the flag row was
+inserted by hand, and M9001 inserts `WHERE NOT EXISTS`, so it records itself
+cleanly.
+
 ## 6. Licensing
 
 This is an Apache-2.0 fork redistributed under a different product name.

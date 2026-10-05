@@ -2,8 +2,8 @@ using FluentMigrator;
 
 namespace Resgrid.Providers.Migrations.Migrations
 {
-	[Migration(243)]
-	public class M0243_AddCallTtsAnnouncementFeatureFlag : Migration
+	[Migration(9001)]
+	public class M9001_AddCallTtsAnnouncementFeatureFlag : Migration
 	{
 		// Keep FlagKey in sync with Resgrid.Model.FeatureFlagKeys.CallTtsAnnouncement.
 		private const string FlagKey = "Calls.TtsAnnouncement";
