@@ -1,0 +1,123 @@
+# SparkOps Core — publish images to GHCR and cut a release.
+#
+# Upstream's `Dotnet` workflow (dotnet.yml) still builds and tests every PR and
+# every push to master; its Docker Hub publish and release jobs are guarded to
+# Resgrid/Core, so they skip here. This workflow is the fork's publish step: it
+# runs only after `Dotnet` succeeds on a push to master, so an image is never
+# published from a commit whose tests failed. Kept in its own file so upstream
+# merges into dotnet.yml conflict on two `if:` lines at most.
+#
+# Versions are 1.1.<run>: the 1.0.x line (v1.0.2-v1.0.10) was the pre-reseat
+# fork.
+
+name: SparkOps images
+
+on:
+  workflow_run:
+    workflows: ["Dotnet"]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-build-and-push:
+    if: >-
+      github.repository == 'wabolabs/sparkcore' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push'))
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ghcr.io/wabolabs/sparkcore/web
+            dockerfile: Web/Resgrid.Web/Dockerfile
+          - image: ghcr.io/wabolabs/sparkcore/api
+            dockerfile: Web/Resgrid.Web.Services/Dockerfile
+          - image: ghcr.io/wabolabs/sparkcore/eventing
+            dockerfile: Web/Resgrid.Web.Eventing/Dockerfile
+          - image: ghcr.io/wabolabs/sparkcore/mcp
+            dockerfile: Web/Resgrid.Web.Mcp/Dockerfile
+          - image: ghcr.io/wabolabs/sparkcore/tts
+            dockerfile: Web/Resgrid.Web.Tts/Dockerfile
+          - image: ghcr.io/wabolabs/sparkcore/worker
+            dockerfile: Workers/Resgrid.Workers.Console/Dockerfile
+          - image: ghcr.io/wabolabs/sparkcore/trackergateway
+            dockerfile: Workers/Resgrid.TrackerGateway/Dockerfile
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # The commit Dotnet tested, not whatever master points at now.
+        ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # Retried: a transient ~15 s ghcr.io timeout failed one shard of run
+    # 26037685834 while every other shard of the same run logged in fine.
+    - name: Login to GitHub Container Registry
+      uses: nick-fields/retry@v3
+      with:
+        timeout_minutes: 2
+        max_attempts: 3
+        retry_wait_seconds: 10
+        command: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Extract version
+      id: version
+      env:
+        SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      run: |
+        echo "version=1.1.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+        echo "sha=${SHA::7}" >> "$GITHUB_OUTPUT"
+
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ matrix.image }}
+        tags: |
+          type=raw,value=${{ steps.version.outputs.version }}
+          type=raw,value=latest
+          type=raw,value=${{ steps.version.outputs.sha }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: ${{ matrix.dockerfile }}
+        push: true
+        build-args: BUILD_VERSION=${{ steps.version.outputs.version }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha,scope=${{ matrix.image }}
+        cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+  github-release:
+    needs: docker-build-and-push
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v1.1.${{ github.run_number }}
+        target_commitish: ${{ github.event.workflow_run.head_sha || github.sha }}
+        name: SparkOps Core v1.1.${{ github.run_number }}
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+        make_latest: true

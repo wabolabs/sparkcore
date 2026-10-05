@@ -14,7 +14,7 @@ on:
 jobs:
   post-to-changerawr:
     # Only run if the PR was merged (not just closed)
-    if: github.event.pull_request.merged == true
+    if: github.repository == 'Resgrid/Core' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
     steps:

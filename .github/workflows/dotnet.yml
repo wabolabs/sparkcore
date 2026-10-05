@@ -64,7 +64,7 @@ jobs:
   # ───────────────────────────────────────────────
   docker-build-and-push:
     needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.repository == 'Resgrid/Core' && github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     environment: BuildEnv
 
@@ -133,7 +133,7 @@ jobs:
   # ───────────────────────────────────────────────
   github-release:
     needs: docker-build-and-push
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.repository == 'Resgrid/Core' && github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
 
     permissions:
