@@ -59,15 +59,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-  <data name="Name1" xml:space="preserve">
-    <value>this is my long string</value>
-  </data>
-  <data name="Bitmap1" xml:space="preserve">
-    <value>[base64 mime encoded serialized .NET Framework object]</value>
-  </data>
-  <data name="Icon1" xml:space="preserve">
-    <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-  </data>
   <data name="DeleteDepartmentSettingsInfo" xml:space="preserve">
     <value>Request deletion of your department. This is a permanent and non-reversable operation that takes 25 days to complete and needs to run after hours. During the wait period you can cancel the request if you choose.</value>
   </data>
@@ -884,6 +875,9 @@
   <data name="RunCardSavedMessage" xml:space="preserve">
     <value>Plan de départ enregistré.</value>
   </data>
+  <data name="RunCardDetachedReferencesRemoved" xml:space="preserve">
+    <value>{0} élément(s) de ce plan de départ faisaient référence à des types d'unités, rôles, types d'appel, casernes ou statuts supprimés depuis et ont été retirés. Vérifiez le plan et enregistrez-le pour conserver la modification.</value>
+  </data>
   <data name="CallPriority" xml:space="preserve">
     <value>Priorité d'appel</value>
   </data>
@@ -1111,5 +1105,170 @@
   </data>
   <data name="GroupDispatchScopeNoRoles" xml:space="preserve">
     <value>Aucun rôle de personnel n'est encore défini.</value>
+  </data>
+  <data name="UnitCallDispatchStatusLabel" xml:space="preserve">
+    <value>Statut de l'unité à l'engagement</value>
+  </data>
+  <data name="UnitCallReleaseStatusLabel" xml:space="preserve">
+    <value>Statut de l'unité à la libération</value>
+  </data>
+  <data name="UnitDefaultStatusesHelp" xml:space="preserve">
+    <value>Ces statuts d'unité par défaut n'utilisent que les types d'état d'unité intégrés. Utilisez le tableau de remplacements par type d'unité ci-dessous lorsqu'un type d'unité a besoin de l'un de ses propres statuts personnalisés.</value>
+  </data>
+  <data name="UnitTypeStatusOverridesHeader" xml:space="preserve">
+    <value>Remplacements de statut par type d'unité</value>
+  </data>
+  <data name="UnitTypeStatusOverridesHelp" xml:space="preserve">
+    <value>Seuls les types d'unité disposant de statuts d'unité personnalisés apparaissent ici. Laissez une valeur sur « Par défaut » pour utiliser le statut intégré défini ci-dessus pour tout le département.</value>
+  </data>
+  <data name="CheckInTimerActiveStatesLabel" xml:space="preserve">
+    <value>États concernés</value>
+  </data>
+  <data name="CheckInTimerLeaveEmptyForAllStates" xml:space="preserve">
+    <value>Laissez vide pour « Tous les états ».</value>
+  </data>
+  <data name="CheckInTimerAllStates" xml:space="preserve">
+    <value>Tous</value>
+  </data>
+  <data name="TtsLanguage" xml:space="preserve">
+    <value>Langue de synthèse vocale</value>
+  </data>
+  <data name="TtsLanguageHelp" xml:space="preserve">
+    <value>Sélectionnez la langue ou le dialecte eSpeak-NG à utiliser pour les messages vocaux de ce département.</value>
+  </data>
+  <data name="RequirePasswordResetViaEmail" xml:space="preserve">
+    <value>Exiger la réinitialisation des mots de passe par e-mail</value>
+  </data>
+  <data name="RequirePasswordResetViaEmailHelp" xml:space="preserve">
+    <value>Empêche les administrateurs de département et de groupe de choisir ou de voir le nouveau mot de passe d'un membre. Les actions de réinitialisation envoient à la place au membre un lien par e-mail à usage unique et de courte durée. Les sessions existantes sont révoquées une fois que le membre a modifié son mot de passe avec succès.</value>
+  </data>
+  <data name="MapStyleHeader" xml:space="preserve">
+    <value>Style de carte</value>
+  </data>
+  <data name="MapStyleHelp" xml:space="preserve">
+    <value>La carte de fond que votre service voit sur toutes les cartes de Resgrid : le site web, Dispatch, Responder, Unit, IC et BigBoard.</value>
+  </data>
+  <data name="MapStyleWebsiteUnavailable" xml:space="preserve">
+    <value>Ce serveur Resgrid n'a pas de jeton Mapbox pour le site web, les cartes du site web conservent donc la carte standard. Le style choisi s'applique toujours dans les applications.</value>
+  </data>
+  <data name="MapStyleOverrideActive" xml:space="preserve">
+    <value>Le remplacement Mapbox du service ci-dessous est activé, le site web et les applications utilisent donc ce style personnalisé au lieu des styles choisis ici.</value>
+  </data>
+  <data name="MapStyleDayLabel" xml:space="preserve">
+    <value>Style de carte de jour</value>
+  </data>
+  <data name="MapStyleDayHelp" xml:space="preserve">
+    <value>Utilisé sur le site web et dans les applications lorsque l'appareil est en mode clair.</value>
+  </data>
+  <data name="MapStyleNightLabel" xml:space="preserve">
+    <value>Style de carte de nuit</value>
+  </data>
+  <data name="MapStyleNightHelp" xml:space="preserve">
+    <value>Utilisé dans les applications lorsque l'appareil est en mode sombre. Automatique choisit la version nocturne du style de jour.</value>
+  </data>
+  <data name="MapStyleAutomaticDay" xml:space="preserve">
+    <value>Automatique (Rues)</value>
+  </data>
+  <data name="MapStyleAutomaticNight" xml:space="preserve">
+    <value>Automatique ({0})</value>
+  </data>
+  <data name="MapStylePreviewAlt" xml:space="preserve">
+    <value>Aperçu du style de carte</value>
+  </data>
+  <data name="MapStyle_Streets" xml:space="preserve">
+    <value>Rues</value>
+  </data>
+  <data name="MapStyle_Outdoors" xml:space="preserve">
+    <value>Plein air (relief)</value>
+  </data>
+  <data name="MapStyle_Light" xml:space="preserve">
+    <value>Clair</value>
+  </data>
+  <data name="MapStyle_Dark" xml:space="preserve">
+    <value>Sombre</value>
+  </data>
+  <data name="MapStyle_Satellite" xml:space="preserve">
+    <value>Satellite</value>
+  </data>
+  <data name="MapStyle_SatelliteStreets" xml:space="preserve">
+    <value>Satellite avec rues</value>
+  </data>
+  <data name="MapStyle_NavigationDay" xml:space="preserve">
+    <value>Navigation jour</value>
+  </data>
+  <data name="MapStyle_NavigationNight" xml:space="preserve">
+    <value>Navigation nuit</value>
+  </data>
+  <data name="MapStyleMapboxGroup" xml:space="preserve">
+    <value>Styles Mapbox</value>
+  </data>
+  <data name="MapStyleCommunityGroup" xml:space="preserve">
+    <value>Styles de la communauté</value>
+  </data>
+  <data name="MapStyleCommunityHelp" xml:space="preserve">
+    <value>Les styles de la communauté sont des cartes de designers issues de la galerie Mapbox ; plusieurs affichent peu de détails de rues, vérifiez donc l'aperçu avant d'en utiliser un pour la répartition.</value>
+  </data>
+  <data name="MapStyle_AmericanMemory" xml:space="preserve">
+    <value>American Memory</value>
+  </data>
+  <data name="MapStyle_Basic" xml:space="preserve">
+    <value>Basic</value>
+  </data>
+  <data name="MapStyle_BasicOvercast" xml:space="preserve">
+    <value>Basic Overcast</value>
+  </data>
+  <data name="MapStyle_Blueprint" xml:space="preserve">
+    <value>Blueprint</value>
+  </data>
+  <data name="MapStyle_Bubble" xml:space="preserve">
+    <value>Bubble</value>
+  </data>
+  <data name="MapStyle_CaliTerrain" xml:space="preserve">
+    <value>Cali Terrain</value>
+  </data>
+  <data name="MapStyle_Decimal" xml:space="preserve">
+    <value>Decimal</value>
+  </data>
+  <data name="MapStyle_FinlandTopo" xml:space="preserve">
+    <value>Finland Topo</value>
+  </data>
+  <data name="MapStyle_Frank" xml:space="preserve">
+    <value>Frank</value>
+  </data>
+  <data name="MapStyle_IceCream" xml:space="preserve">
+    <value>Ice Cream</value>
+  </data>
+  <data name="MapStyle_LeShine" xml:space="preserve">
+    <value>Lè Shine</value>
+  </data>
+  <data name="MapStyle_StreetsJapan" xml:space="preserve">
+    <value>Mapbox Streets Japan</value>
+  </data>
+  <data name="MapStyle_Mineral" xml:space="preserve">
+    <value>Mineral</value>
+  </data>
+  <data name="MapStyle_Minimo" xml:space="preserve">
+    <value>Minimo</value>
+  </data>
+  <data name="MapStyle_Moonlight" xml:space="preserve">
+    <value>Moonlight</value>
+  </data>
+  <data name="MapStyle_NeonGlow" xml:space="preserve">
+    <value>Neon Glow</value>
+  </data>
+  <data name="MapStyle_NorthStar" xml:space="preserve">
+    <value>North Star</value>
+  </data>
+  <data name="MapStyle_Pencil" xml:space="preserve">
+    <value>Pencil</value>
+  </data>
+  <data name="MapStyle_StandardOil" xml:space="preserve">
+    <value>Standard Oil Company</value>
+  </data>
+  <data name="MapStyle_Unicorn" xml:space="preserve">
+    <value>Unicorn</value>
+  </data>
+  <data name="RunCardTriggerRequired" xml:space="preserve">
+    <value>Ajoutez au moins un déclencheur avant d’enregistrer ce plan de départ.</value>
   </data>
 </root>

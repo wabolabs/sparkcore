@@ -61,6 +61,9 @@ namespace Resgrid.Repositories.DataRepository
 								-- CallUnits reference UnitStates and CallDispatches reference ActionLogs, both deleted there.
 								DELETE FROM [dbo].[CallAttachments] WHERE CallId IN (SELECT CallId FROM [dbo].[Calls] WHERE DepartmentId = @DepartmentId)
 								DELETE FROM [dbo].[CallNotes] WHERE CallId IN (SELECT CallId FROM [dbo].[Calls] WHERE DepartmentId = @DepartmentId)
+								-- Call location index rows cascade with their call, but be explicit; the state row has no FK
+								DELETE FROM [dbo].[CallLocationKeys] WHERE DepartmentId = @DepartmentId OR CallId IN (SELECT CallId FROM [dbo].[Calls] WHERE DepartmentId = @DepartmentId)
+								DELETE FROM [dbo].[CallLocationIndexStates] WHERE DepartmentId = @DepartmentId
 								DELETE FROM [dbo].[CallDispatches] WHERE CallId IN (SELECT CallId FROM [dbo].[Calls] WHERE DepartmentId = @DepartmentId)
 								DELETE FROM [dbo].[CallDispatchGroups] WHERE CallId IN (SELECT CallId FROM [dbo].[Calls] WHERE DepartmentId = @DepartmentId)
 								DELETE FROM [dbo].[CallDispatchRoles] WHERE CallId IN (SELECT CallId FROM [dbo].[Calls] WHERE DepartmentId = @DepartmentId)
@@ -74,6 +77,9 @@ namespace Resgrid.Repositories.DataRepository
 								-- Tracking devices reference Units through a (UnitId, DepartmentId) key
 								DELETE FROM [dbo].[UnitTrackingCredentials] WHERE UnitTrackingDeviceId IN (SELECT UnitTrackingDeviceId FROM [dbo].[UnitTrackingDevices] WHERE DepartmentId = @DepartmentId)
 								DELETE FROM [dbo].[UnitTrackingDevices] WHERE DepartmentId = @DepartmentId
+
+								-- Status timer acknowledgements reference Units (DepartmentId, UnitId) and UnitStates (cascades, but be explicit)
+								DELETE FROM [dbo].[UnitStatusAlertAcknowledgements] WHERE DepartmentId = @DepartmentId
 
 								OPEN unit_cursor
 								FETCH NEXT FROM unit_cursor INTO @UnitId

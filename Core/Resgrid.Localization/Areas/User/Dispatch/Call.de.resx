@@ -59,15 +59,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-  <data name="Name1" xml:space="preserve">
-    <value>this is my long string</value>
-  </data>
-  <data name="Bitmap1" xml:space="preserve">
-    <value>[base64 mime encoded serialized .NET Framework object]</value>
-  </data>
-  <data name="Icon1" xml:space="preserve">
-    <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-  </data>
   <data name="ActiveCalls" xml:space="preserve">
     <value>Active Calls</value>
   </data>
@@ -785,6 +776,7 @@
   <data name="InvalidDestinationPoi" xml:space="preserve">
     <value>Bitte wählen Sie einen gültigen Ziel-POI aus.</value>
   </data>
+  <data name="InvalidCallCoordinates" xml:space="preserve"><value>Breiten- und Längengrad müssen Dezimalzahlen sein: Breitengrad zwischen -90 und 90, Längengrad zwischen -180 und 180.</value></data>
   <data name="LoggedOff" xml:space="preserve">
     <value>hat sich abgemeldet.</value>
   </data>
@@ -943,5 +935,26 @@
   </data>
   <data name="NearestUnitsNoPosition" xml:space="preserve">
     <value>Keine Position</value>
+  </data>
+  <data name="SiteInfo" xml:space="preserve">
+    <value>Objektinformationen</value>
+  </data>
+  <data name="NoSiteInfo" xml:space="preserve">
+    <value>Mit diesem Einsatz sind keine Kontakte mit Objektinformationen verknüpft.</value>
+  </data>
+  <data name="PremiseHazard" xml:space="preserve">
+    <value>Objektgefahr</value>
+  </data>
+  <data name="PremiseHazards" xml:space="preserve">
+    <value>Objektgefahren</value>
+  </data>
+  <data name="AlertNotes" xml:space="preserve">
+    <value>Warnhinweise</value>
+  </data>
+  <data name="NoPreplan" xml:space="preserve">
+    <value>Für diesen Kontakt wurde kein Einsatzplan erfasst.</value>
+  </data>
+  <data name="SiteFiles" xml:space="preserve">
+    <value>Objektdateien</value>
   </data>
 </root>

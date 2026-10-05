@@ -32,6 +32,19 @@ var resgrid;
         }
 
         $(document).ajaxError(function (event, jqxhr) {
+            // A change that needs a recent second factor: the server is holding it, and verifying finishes it
+            // (RequiresRecentTwoFactorAttribute answers a script call with where to go instead of a redirect).
+            // Only ever a page on this site: a response from anywhere else must not choose where the user goes.
+            var stepUp = jqxhr && jqxhr.status === 403 ? jqxhr.getResponseHeader('X-Resgrid-Step-Up') : null;
+            var stepUpUrl = null;
+            if (stepUp) {
+                try { stepUpUrl = new URL(stepUp, window.location.origin); } catch (e) { stepUpUrl = null; }
+            }
+            if (stepUpUrl && stepUpUrl.origin === window.location.origin) {
+                window.location.assign(stepUpUrl.href);
+                return;
+            }
+
             if (jqxhr && jqxhr.status === 401) {
                 window.location.assign(resgrid.absoluteBaseUrl + '/Account/LogOn?returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search));
             }
@@ -41,11 +54,33 @@ var resgrid;
             $('#top-icons-area').load(resgrid.absoluteBaseUrl + '/User/Department/TopIconsArea');
 
             const { autocomplete } = window['@algolia/autocomplete-js'];
-            if (autocomplete) {
+            const autocompleteHost = document.getElementById('autocomplete');
+            if (autocomplete && autocompleteHost) {
+                const searchPageUrl = function (q) { return resgrid.absoluteBaseUrl + '/User/Search?q=' + encodeURIComponent(q); };
+                const searchAllLabel = autocompleteHost.getAttribute('data-search-all-label') || 'Search all results';
+                // Always offered while there is text: the full page searches every family, call notes included, with filters and export.
+                const searchAllSource = function (q) {
+                    return {
+                        sourceId: 'search-all',
+                        getItems() { return [{ label: searchAllLabel, summary: q, url: searchPageUrl(q) }]; },
+                        getItemUrl({ item }) { return item.url; },
+                        onSelect(event) { if (event.item && event.item.url) { window.location.assign(event.item.url); } },
+                        templates: {
+                            item({ item, html }) {
+                                return html`<div><a href="${item.url}" style="text-decoration: none; color: inherit;"><strong><i class="fa fa-search"></i> ${item.label}</strong> <span class="text-muted">“${item.summary}”</span></a></div>`;
+                            },
+                        },
+                    };
+                };
                 autocomplete({
                     container: '#autocomplete',
-                    placeholder: 'Search Resgrid',
+                    placeholder: autocompleteHost.getAttribute('data-placeholder') || 'Search Resgrid',
                     openOnFocus: true,
+                    // Enter without picking a row opens the full search page for the typed text.
+                    onSubmit({ state }) {
+                        const q = (state.query || '').trim();
+                        if (q.length > 0) { window.location.assign(searchPageUrl(q)); }
+                    },
                     getSources({ query }) {
                         const q = (query || '').trim();
                         // One round trip serves both sections: system functionality ("Actions") and entity hits.
@@ -59,7 +94,7 @@ var resgrid;
                                     if (!g) { g = { name: name, items: [] }; groups.push(g); }
                                     g.items.push(item);
                                 });
-                                return groups.map(g => ({
+                                const sources = groups.map(g => ({
                                     sourceId: 'search-' + g.name.toLowerCase(),
                                     getItems() { return g.items; },
                                     getItemUrl({ item }) { return item.url; },
@@ -77,8 +112,10 @@ var resgrid;
                                         },
                                     },
                                 }));
+                                if (q.length > 0) { sources.push(searchAllSource(q)); }
+                                return sources;
                             })
-                            .catch(() => []);
+                            .catch(() => q.length > 0 ? [searchAllSource(q)] : []);
                     },
                 });
             }

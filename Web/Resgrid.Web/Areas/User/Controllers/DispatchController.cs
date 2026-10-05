@@ -74,6 +74,8 @@ namespace Resgrid.Web.Areas.User.Controllers
 		private readonly IModerationService _moderationService;
 		private readonly IStringLocalizer<Resgrid.Localization.Areas.User.Dispatch.Call> _dispatchLocalizer;
 		private readonly IStringLocalizer<Resgrid.Localization.Common> _commonLocalizer;
+		private readonly ICallLocationHistoryService _callLocationHistoryService;
+		private readonly IStringLocalizer<Resgrid.Localization.Areas.User.Dispatch.LocationHistory> _locationHistoryLocalizer;
 		private readonly IDispatchRecommendationService _dispatchRecommendationService;
 		private readonly IDispatchScopeService _dispatchScopeService;
 		private readonly INearestUnitService _nearestUnitService;
@@ -98,8 +100,11 @@ namespace Resgrid.Web.Areas.User.Controllers
 			IDispatchRecommendationService dispatchRecommendationService, IFeatureToggleService featureToggleService,
 			IProtectedReadService protectedReadService, IRecordsCutoverService recordsCutoverService, IRecordsProtectionService recordsProtection,
 			IDispatchScopeService dispatchScopeService, INearestUnitService nearestUnitService,
+			ICallLocationHistoryService callLocationHistoryService, IStringLocalizer<Resgrid.Localization.Areas.User.Dispatch.LocationHistory> locationHistoryLocalizer,
 			ICallRespondingService callRespondingService)
 		{
+			_callLocationHistoryService = callLocationHistoryService;
+			_locationHistoryLocalizer = locationHistoryLocalizer;
 			_departmentsService = departmentsService;
 			_usersService = usersService;
 			_callsService = callsService;
@@ -376,7 +381,9 @@ namespace Resgrid.Web.Areas.User.Controllers
 			{
 				Note = model.Call?.Notes,
 				Address = model.Call?.Address,
-				Geolocation = model.Call?.GeoLocationData,
+				// A placed pin. An address alone does not count even though it is geocoded on save, matching the v4
+				// SaveCall, which also checks the policy before geocoding.
+				Geolocation = model.PostedGeoLocation(),
 				What3Words = model.What3Word,
 				ContactName = model.Call?.ContactName,
 				ContactInfo = model.Call?.ContactNumber,
@@ -420,6 +427,14 @@ namespace Resgrid.Web.Areas.User.Controllers
 			if (model.Call?.DestinationPoiId.HasValue == true && model.Call.DestinationPoiId.Value > 0 && destinationPoi == null)
 				ModelState.AddModelError("Call.DestinationPoiId", _dispatchLocalizer["InvalidDestinationPoi"].Value);
 
+			// The form posts the pin only as Latitude/Longitude. Call.GeoLocationData is model-bound, so drop anything
+			// posted into it (as with CallFormData below) rather than let an unchecked value satisfy the policy or be saved.
+			if (model.Call != null)
+				model.Call.GeoLocationData = null;
+
+			if (model.HasInvalidPin())
+				ModelState.AddModelError(nameof(model.Latitude), _dispatchLocalizer["InvalidCallCoordinates"].Value);
+
 			// Same policy the apps apply and the v4 API enforces: a call-taker cannot forward an
 			// incident to the field until the information the crews need is on it. Departments with no
 			// policy configured are unaffected.
@@ -447,8 +462,13 @@ namespace Resgrid.Web.Areas.User.Controllers
 				if (model.Call.Type == _dispatchLocalizer["NoType"].Value)
 					model.Call.Type = null;
 
-				if (!String.IsNullOrEmpty(model.Latitude) && !String.IsNullOrEmpty(model.Longitude))
-					model.Call.GeoLocationData = string.Format("{0},{1}", model.Latitude, model.Longitude);
+				var pin = model.PostedGeoLocation();
+				if (pin != null)
+					model.Call.GeoLocationData = pin;
+				// Address typed with no pin placed: locate it the same way the v4 SaveCall does, so the call
+				// still gets a map in the web and mobile apps.
+				else if (!string.IsNullOrWhiteSpace(model.Call.Address))
+					model.Call.GeoLocationData = await _geoLocationProvider.GetLatLonFromAddress(model.Call.Address);
 
 				// Check-in timers
 				var checkInTimersValue = collection["Call.CheckInTimersEnabled"].FirstOrDefault();
@@ -1676,6 +1696,10 @@ namespace Resgrid.Web.Areas.User.Controllers
 
 				if (!String.IsNullOrEmpty(model.Latitude) && !String.IsNullOrEmpty(model.Longitude))
 					model.Call.GeoLocationData = string.Format("{0},{1}", model.Latitude, model.Longitude);
+				// Address typed with no pin placed: locate it the same way the v4 SaveCall does, so the call
+				// still gets a map in the web and mobile apps.
+				else if (!string.IsNullOrWhiteSpace(model.Call.Address))
+					model.Call.GeoLocationData = await _geoLocationProvider.GetLatLonFromAddress(model.Call.Address);
 
 				List<string> dispatchingUserIds = new List<string>();
 				List<int> dispatchingGroupIds = new List<int>();
@@ -2360,6 +2384,16 @@ namespace Resgrid.Web.Areas.User.Controllers
 			}
 
 			return callNotes;
+		}
+
+		/// <summary>Previous calls at this call's location or with its contacts (the call page's Location History tab).</summary>
+		[HttpGet]
+		[Authorize(Policy = ResgridResources.Call_View)]
+		public async Task<IActionResult> GetCallLocationHistory(int callId)
+		{
+			var history = await _callLocationHistoryService.GetHistoryForCallAsync(DepartmentId, UserId, callId);
+			var department = await _departmentsService.GetDepartmentByIdAsync(DepartmentId);
+			return Json(await CallLocationHistoryJson.FromAsync(history, department, _callsService, _departmentsService, _locationHistoryLocalizer));
 		}
 
 		[HttpGet]

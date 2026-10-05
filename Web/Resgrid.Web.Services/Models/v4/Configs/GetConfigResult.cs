@@ -87,6 +87,31 @@ namespace Resgrid.Web.Services.Models.v4.Configs
 		public string MapAttribution { get; set; }
 
 		/// <summary>
+		/// Mapbox style url (mapbox://styles/...) the department's maps use in a light theme. Always
+		/// populated: the built-in style the department chose, Streets when it has not chosen one, or the
+		/// department's own custom style when its Mapbox override is in effect (see AppMapboxAccessToken).
+		/// </summary>
+		public string MapDayStyleUrl { get; set; }
+
+		/// <summary>
+		/// Mapbox style url (mapbox://styles/...) the department's maps use in a dark theme. Always
+		/// populated: the built-in night style the department chose; when it has not chosen one, the pair
+		/// of the day style (Dark for Streets, Light and Dark; Navigation Night for Navigation Day and
+		/// Navigation Night; unchanged for Outdoors, Satellite and Satellite Streets). The department's own
+		/// custom style when its Mapbox override is in effect.
+		/// </summary>
+		public string MapNightStyleUrl { get; set; }
+
+		/// <summary>
+		/// Public (pk.) Mapbox token the native apps should render maps and call Mapbox services with:
+		/// the department's own token when its Mapbox override is in effect (switched on, with a public
+		/// token and a valid style url), otherwise the server's token for the requesting app. An override
+		/// missing either half is ignored and the department's built-in style choice applies. Empty means
+		/// keep the token built into the app. Only signed-in callers get one.
+		/// </summary>
+		public string AppMapboxAccessToken { get; set; }
+
+		/// <summary>
 		/// Latitude every map in every client should open on for this department. Resolved from the
 		/// department's configured map center, falling back to its address and finally to a system
 		/// default, so this is always populated.
@@ -168,6 +193,37 @@ namespace Resgrid.Web.Services.Models.v4.Configs
 		/// Novu Environment Id
 		/// </summary>
 		public string NovuEnvironmentId { get; set; }
+
+		/// <summary>
+		/// Firebase web app for browser and desktop push (WebPushConfig). The web and Electron editions mint
+		/// their FCM token with it and register that token as Platform 3. All empty while web push is off.
+		/// </summary>
+		public string WebPushApiKey { get; set; }
+
+		/// <summary>
+		/// Firebase web app auth domain for browser and desktop push
+		/// </summary>
+		public string WebPushAuthDomain { get; set; }
+
+		/// <summary>
+		/// Firebase project id for browser and desktop push
+		/// </summary>
+		public string WebPushProjectId { get; set; }
+
+		/// <summary>
+		/// Firebase messaging sender id for browser and desktop push
+		/// </summary>
+		public string WebPushMessagingSenderId { get; set; }
+
+		/// <summary>
+		/// Firebase web app id for browser and desktop push
+		/// </summary>
+		public string WebPushAppId { get; set; }
+
+		/// <summary>
+		/// Public VAPID key of the Firebase project's Web Push certificate
+		/// </summary>
+		public string WebPushVapidKey { get; set; }
 
 		/// <summary>
 		/// Analytics Api Key

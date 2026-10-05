@@ -933,6 +933,9 @@
   <data name="RunCardSavedMessage" xml:space="preserve">
     <value>تم حفظ البطاقة.</value>
   </data>
+  <data name="RunCardDetachedReferencesRemoved" xml:space="preserve">
+    <value>تمت إزالة {0} عنصر من بطاقة الإرسال هذه كانت تشير إلى أنواع وحدات أو أدوار أو أنواع نداءات أو محطات أو حالات تم حذفها. راجع البطاقة واحفظها للإبقاء على التغيير.</value>
+  </data>
   <data name="CallPriority" xml:space="preserve">
     <value>أولوية النداء</value>
   </data>
@@ -1160,5 +1163,170 @@
   </data>
   <data name="GroupDispatchScopeNoRoles" xml:space="preserve">
     <value>لم يتم تعريف أي أدوار للأفراد بعد.</value>
+  </data>
+  <data name="UnitCallDispatchStatusLabel" xml:space="preserve">
+    <value>حالة الوحدة عند توزيع البلاغ</value>
+  </data>
+  <data name="UnitCallReleaseStatusLabel" xml:space="preserve">
+    <value>حالة الوحدة عند إغلاق البلاغ</value>
+  </data>
+  <data name="UnitDefaultStatusesHelp" xml:space="preserve">
+    <value>تستخدم حالات الوحدات الافتراضية هذه أنواع حالات الوحدات المدمجة فقط. استخدم جدول تجاوزات أنواع الوحدات أدناه عندما يحتاج نوع وحدة إلى إحدى حالاته المخصصة.</value>
+  </data>
+  <data name="UnitTypeStatusOverridesHeader" xml:space="preserve">
+    <value>تجاوزات حالات أنواع الوحدات</value>
+  </data>
+  <data name="UnitTypeStatusOverridesHelp" xml:space="preserve">
+    <value>تظهر هنا فقط أنواع الوحدات التي لها حالات وحدات مخصصة. اترك القيمة على "افتراضي" لاستخدام الحالة المدمجة المطبّقة على مستوى القسم أعلاه.</value>
+  </data>
+  <data name="CheckInTimerActiveStatesLabel" xml:space="preserve">
+    <value>الحالات النشطة</value>
+  </data>
+  <data name="CheckInTimerLeaveEmptyForAllStates" xml:space="preserve">
+    <value>اتركه فارغًا لاختيار "جميع الحالات".</value>
+  </data>
+  <data name="CheckInTimerAllStates" xml:space="preserve">
+    <value>الكل</value>
+  </data>
+  <data name="TtsLanguage" xml:space="preserve">
+    <value>لغة تحويل النص إلى كلام (TTS)</value>
+  </data>
+  <data name="TtsLanguageHelp" xml:space="preserve">
+    <value>اختر لغة أو لهجة eSpeak-NG المستخدمة في الرسائل الصوتية لهذا القسم.</value>
+  </data>
+  <data name="RequirePasswordResetViaEmail" xml:space="preserve">
+    <value>اشتراط إعادة تعيين كلمات المرور عبر البريد الإلكتروني</value>
+  </data>
+  <data name="RequirePasswordResetViaEmailHelp" xml:space="preserve">
+    <value>يمنع مسؤولي القسم والمجموعات من اختيار كلمة المرور الجديدة للعضو أو الاطلاع عليها. بدلًا من ذلك، تُرسل إجراءات إعادة التعيين إلى العضو رابطًا عبر البريد الإلكتروني قصير الصلاحية يُستخدم لمرة واحدة. تُلغى الجلسات الحالية بعد أن يغيّر العضو كلمة المرور بنجاح.</value>
+  </data>
+  <data name="MapStyleHeader" xml:space="preserve">
+    <value>نمط الخريطة</value>
+  </data>
+  <data name="MapStyleHelp" xml:space="preserve">
+    <value>الخريطة الأساسية التي يراها قسمك في كل خريطة في Resgrid: الموقع الإلكتروني وDispatch وResponder وUnit وIC وBigBoard.</value>
+  </data>
+  <data name="MapStyleWebsiteUnavailable" xml:space="preserve">
+    <value>لا يحتوي خادم Resgrid هذا على رمز Mapbox للموقع الإلكتروني، لذلك تحتفظ خرائط الموقع بالخريطة القياسية. يظل النمط الذي تختاره مطبقًا في التطبيقات.</value>
+  </data>
+  <data name="MapStyleOverrideActive" xml:space="preserve">
+    <value>تجاوز Mapbox الخاص بالقسم أدناه مفعّل، لذلك يستخدم الموقع الإلكتروني والتطبيقات ذلك النمط المخصص بدلاً من الأنماط المحددة هنا.</value>
+  </data>
+  <data name="MapStyleDayLabel" xml:space="preserve">
+    <value>نمط الخريطة النهاري</value>
+  </data>
+  <data name="MapStyleDayHelp" xml:space="preserve">
+    <value>يُستخدم على الموقع الإلكتروني وفي التطبيقات عندما يكون الجهاز في الوضع الفاتح.</value>
+  </data>
+  <data name="MapStyleNightLabel" xml:space="preserve">
+    <value>نمط الخريطة الليلي</value>
+  </data>
+  <data name="MapStyleNightHelp" xml:space="preserve">
+    <value>يُستخدم في التطبيقات عندما يكون الجهاز في الوضع الداكن. يختار الوضع التلقائي النسخة الليلية من النمط النهاري.</value>
+  </data>
+  <data name="MapStyleAutomaticDay" xml:space="preserve">
+    <value>تلقائي (الشوارع)</value>
+  </data>
+  <data name="MapStyleAutomaticNight" xml:space="preserve">
+    <value>تلقائي ({0})</value>
+  </data>
+  <data name="MapStylePreviewAlt" xml:space="preserve">
+    <value>معاينة نمط الخريطة</value>
+  </data>
+  <data name="MapStyle_Streets" xml:space="preserve">
+    <value>الشوارع</value>
+  </data>
+  <data name="MapStyle_Outdoors" xml:space="preserve">
+    <value>الهواء الطلق (التضاريس)</value>
+  </data>
+  <data name="MapStyle_Light" xml:space="preserve">
+    <value>فاتح</value>
+  </data>
+  <data name="MapStyle_Dark" xml:space="preserve">
+    <value>داكن</value>
+  </data>
+  <data name="MapStyle_Satellite" xml:space="preserve">
+    <value>القمر الصناعي</value>
+  </data>
+  <data name="MapStyle_SatelliteStreets" xml:space="preserve">
+    <value>القمر الصناعي مع الشوارع</value>
+  </data>
+  <data name="MapStyle_NavigationDay" xml:space="preserve">
+    <value>ملاحة نهارية</value>
+  </data>
+  <data name="MapStyle_NavigationNight" xml:space="preserve">
+    <value>ملاحة ليلية</value>
+  </data>
+  <data name="MapStyleMapboxGroup" xml:space="preserve">
+    <value>أنماط Mapbox</value>
+  </data>
+  <data name="MapStyleCommunityGroup" xml:space="preserve">
+    <value>أنماط المجتمع</value>
+  </data>
+  <data name="MapStyleCommunityHelp" xml:space="preserve">
+    <value>أنماط المجتمع هي خرائط من تصميم مصممين في معرض Mapbox؛ يعرض بعضها تفاصيل قليلة للشوارع، لذا تحقق من المعاينة قبل استخدام أحدها في الإرسال.</value>
+  </data>
+  <data name="MapStyle_AmericanMemory" xml:space="preserve">
+    <value>American Memory</value>
+  </data>
+  <data name="MapStyle_Basic" xml:space="preserve">
+    <value>Basic</value>
+  </data>
+  <data name="MapStyle_BasicOvercast" xml:space="preserve">
+    <value>Basic Overcast</value>
+  </data>
+  <data name="MapStyle_Blueprint" xml:space="preserve">
+    <value>Blueprint</value>
+  </data>
+  <data name="MapStyle_Bubble" xml:space="preserve">
+    <value>Bubble</value>
+  </data>
+  <data name="MapStyle_CaliTerrain" xml:space="preserve">
+    <value>Cali Terrain</value>
+  </data>
+  <data name="MapStyle_Decimal" xml:space="preserve">
+    <value>Decimal</value>
+  </data>
+  <data name="MapStyle_FinlandTopo" xml:space="preserve">
+    <value>Finland Topo</value>
+  </data>
+  <data name="MapStyle_Frank" xml:space="preserve">
+    <value>Frank</value>
+  </data>
+  <data name="MapStyle_IceCream" xml:space="preserve">
+    <value>Ice Cream</value>
+  </data>
+  <data name="MapStyle_LeShine" xml:space="preserve">
+    <value>Lè Shine</value>
+  </data>
+  <data name="MapStyle_StreetsJapan" xml:space="preserve">
+    <value>Mapbox Streets Japan</value>
+  </data>
+  <data name="MapStyle_Mineral" xml:space="preserve">
+    <value>Mineral</value>
+  </data>
+  <data name="MapStyle_Minimo" xml:space="preserve">
+    <value>Minimo</value>
+  </data>
+  <data name="MapStyle_Moonlight" xml:space="preserve">
+    <value>Moonlight</value>
+  </data>
+  <data name="MapStyle_NeonGlow" xml:space="preserve">
+    <value>Neon Glow</value>
+  </data>
+  <data name="MapStyle_NorthStar" xml:space="preserve">
+    <value>North Star</value>
+  </data>
+  <data name="MapStyle_Pencil" xml:space="preserve">
+    <value>Pencil</value>
+  </data>
+  <data name="MapStyle_StandardOil" xml:space="preserve">
+    <value>Standard Oil Company</value>
+  </data>
+  <data name="MapStyle_Unicorn" xml:space="preserve">
+    <value>Unicorn</value>
+  </data>
+  <data name="RunCardTriggerRequired" xml:space="preserve">
+    <value>أضف مشغّلًا واحدًا على الأقل قبل حفظ بطاقة الإرسال هذه.</value>
   </data>
 </root>

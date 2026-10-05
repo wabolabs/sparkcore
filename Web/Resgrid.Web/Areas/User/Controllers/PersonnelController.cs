@@ -322,31 +322,7 @@ namespace Resgrid.Web.Areas.User.Controllers
 			tree1.icon = "";
 			trees.Add(tree1);
 
-			if (model.Groups != null && model.Groups.Any())
-			{
-				foreach (var topLevelGroup in model.Groups.Where(x => !x.ParentDepartmentGroupId.HasValue).ToList())
-				{
-					var group = new BSTreeModel();
-					group.id = $"TreeGroup_{topLevelGroup.DepartmentGroupId.ToString()}";
-					group.text = topLevelGroup.Name;
-					group.icon = "";
-
-					if (topLevelGroup.Children != null && topLevelGroup.Children.Any())
-					{
-						foreach (var secondLevelGroup in topLevelGroup.Children)
-						{
-							var secondLevelGroupTree = new BSTreeModel();
-							secondLevelGroupTree.id = $"TreeGroup_{secondLevelGroup.DepartmentGroupId.ToString()}";
-							secondLevelGroupTree.text = secondLevelGroup.Name;
-							secondLevelGroupTree.icon = "";
-
-							group.nodes.Add(secondLevelGroupTree);
-						}
-					}
-
-					trees.Add(group);
-				}
-			}
+			trees.AddRange(BSTreeModel.ForDepartmentGroups(model.Groups));
 			model.TreeData = Newtonsoft.Json.JsonConvert.SerializeObject(trees);
 
 
@@ -544,7 +520,7 @@ namespace Resgrid.Web.Areas.User.Controllers
 			ViewBag.TimeZones = new SelectList(TimeZones.Zones, "Key", "Value");
 
 			model.IsUserGroupAdmin = await _departmentGroupsService.IsUserAGroupAdminAsync(UserId, DepartmentId);
-			if (model.IsUserGroupAdmin)
+			if (model.IsUserGroupAdmin && !ClaimsAuthorizationHelper.IsUserDepartmentAdmin())
 			{
 				var group = await _departmentGroupsService.GetGroupForUserAsync(UserId, DepartmentId);
 				model.Groups = new SelectList(groups.Where(x => x.DepartmentGroupId == group.DepartmentGroupId), "DepartmentGroupId", "Name");
@@ -690,8 +666,10 @@ namespace Resgrid.Web.Areas.User.Controllers
 					auditEvent.UserAgent = $"{Request.Headers["User-Agent"]} {Request.Headers["Accept-Language"]}";
 					_eventAggregator.SendMessage<AuditEvent>(auditEvent);
 
+					// Only a department admin may grant group admin (same rule as the profile edit page); a
+					// group admin adding someone to their own group can't hand out the flag.
 					if (model.UserGroup != 0)
-						await _departmentGroupsService.MoveUserIntoGroupAsync(user.UserId, model.UserGroup, model.IsGroupAdminAdding, DepartmentId, cancellationToken);
+						await _departmentGroupsService.MoveUserIntoGroupAsync(user.UserId, model.UserGroup, model.IsGroupAdminAdding && ClaimsAuthorizationHelper.IsUserDepartmentAdmin(), DepartmentId, cancellationToken);
 
 					if (form.ContainsKey("roles"))
 					{

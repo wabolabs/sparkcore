@@ -321,6 +321,8 @@ namespace Resgrid.Repositories.DataRepository
 			builder.RegisterType<RouteInstancesRepository>().As<IRouteInstancesRepository>().InstancePerLifetimeScope();
 			builder.RegisterType<RouteInstanceStopsRepository>().As<IRouteInstanceStopsRepository>().InstancePerLifetimeScope();
 			builder.RegisterType<RouteDeviationsRepository>().As<IRouteDeviationsRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<UnitStatusAlertAcknowledgementsRepository>().As<IUnitStatusAlertAcknowledgementsRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<CallLocationKeysRepository>().As<ICallLocationKeysRepository>().InstancePerLifetimeScope();
 
 			// CheckIn Repositories
 			builder.RegisterType<CheckInTimerConfigRepository>().As<ICheckInTimerConfigRepository>().InstancePerLifetimeScope();
@@ -364,6 +366,18 @@ namespace Resgrid.Repositories.DataRepository
 			builder.RegisterType<WorkflowRunLogRepository>().As<IWorkflowRunLogRepository>().InstancePerLifetimeScope();
 			builder.RegisterType<WorkflowDailyUsageRepository>().As<IWorkflowDailyUsageRepository>().InstancePerLifetimeScope();
 			builder.RegisterType<AdpAccessStore>().As<IAdpAccessStore>().InstancePerLifetimeScope();
+			// Passkey plan Phase 1: one-time TOTP steps and hashed single-use recovery codes (compare-and-set, own connections).
+			builder.RegisterType<UserMfaStateRepository>().As<IUserMfaStateRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<AuthenticationChallengeRepository>().As<IAuthenticationChallengeRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<UserPasskeyRepository>().As<IUserPasskeyRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<MfaLoginTransactionRepository>().As<IMfaLoginTransactionRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<SsoLoginTransactionRepository>().As<ISsoLoginTransactionRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<MfaApprovalRequestRepository>().As<IMfaApprovalRequestRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<SecurityNoticeRepository>().As<ISecurityNoticeRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<MfaActivityRepository>().As<IMfaActivityRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<FactorRecoveryTransactionRepository>().As<IFactorRecoveryTransactionRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<UserSessionMfaEvidenceRepository>().As<IUserSessionMfaEvidenceRepository>().InstancePerLifetimeScope();
+			builder.RegisterType<BrokerReplayRepository>().As<IBrokerReplayRepository>().InstancePerLifetimeScope();
 			builder.RegisterType<AdpAuditRepository>().As<IAdpAuditRepository>().InstancePerLifetimeScope();
 
 			// Protected Workflows (ADP push model): per-workflow releases and the per-department disclosure hash chain.

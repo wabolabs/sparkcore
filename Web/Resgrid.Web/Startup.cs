@@ -169,7 +169,10 @@ namespace Resgrid.Web
 				config.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 				config.Lockout.MaxFailedAccessAttempts = 5;
 				config.Lockout.AllowedForNewUsers = true;
-			}).AddDefaultTokenProviders().AddClaimsPrincipalFactory<ClaimsPrincipalFactory<Model.Identity.IdentityUser, Model.Identity.IdentityRole>>();
+			}).AddDefaultTokenProviders()
+				// One-time TOTP steps (passkey plan section 7.5 rule 8): replaces Identity's authenticator provider.
+				.AddTokenProvider<ResgridAuthenticatorTokenProvider>(TokenOptions.DefaultAuthenticatorProvider)
+				.AddClaimsPrincipalFactory<ClaimsPrincipalFactory<Model.Identity.IdentityUser, Model.Identity.IdentityRole>>();
 
 			services.AddAuthentication(sharedOptions =>
 				{
@@ -497,6 +500,9 @@ namespace Resgrid.Web
 				options.Filters.Add<Filters.ProtectedDataEgressFilter>();
 				// RMS protected content (plan 5.9.3): a refused reveal becomes a step-up prompt, never a 500.
 				options.Filters.Add<Filters.RecordProtectedContentExceptionFilter>();
+				// A submission held while the user verified (2FA step-up, password re-confirmation) is put back as the form when
+				// the resume page posts it; a replay post is restored or refused, never bound bare.
+				options.Filters.Add<Filters.HeldSubmissionReplayFilter>();
 			}).AddJsonOptions(jsonOptions =>
 			{
 				jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = null;
@@ -597,6 +603,8 @@ namespace Resgrid.Web
 			// ADP broker CLIENT only (no key material, no KMS route) — the wizard preflight probes
 			// broker health through it. The real KMS adapter module is broker-host-only.
 			builder.RegisterModule(new Resgrid.Providers.ProtectedData.ProtectedDataBrokerClientModule());
+			// WebAuthn ceremonies for passkey enrollment and step-up; every passkey gate starts off (PasskeyConfig).
+			builder.RegisterModule(new Resgrid.Providers.Authentication.AuthenticationProviderModule());
 
 			builder.RegisterModule(new Resgrid.Chatbot.ChatbotModule());
 			builder.RegisterModule(new Resgrid.Chatbot.NLU.NLUModule());
@@ -618,6 +626,10 @@ namespace Resgrid.Web
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
+			// Passkeys fail closed on a bad relying-party configuration; say so at startup (plan section 10.3).
+			Resgrid.Services.PasskeyReadinessReporter.Report(app.ApplicationServices.GetService(typeof(Resgrid.Model.Services.IRelyingPartyRegistry)) as Resgrid.Model.Services.IRelyingPartyRegistry);
+			Resgrid.Repositories.DataRepository.Stores.AuthenticatorSeedProtector.ReportReadiness();
+
 			// Preserve the trusted KnownNetworks configured through DI.
 			app.UseForwardedHeaders();
 

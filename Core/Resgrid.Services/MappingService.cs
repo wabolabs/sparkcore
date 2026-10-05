@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Resgrid.Model;
 using Resgrid.Model.Repositories;
+using Resgrid.Model.Search;
 using Resgrid.Model.Services;
 
 namespace Resgrid.Services
@@ -15,10 +16,12 @@ namespace Resgrid.Services
 		private readonly IPoisRepository _poisRepository;
 		private readonly Lazy<IMongoRepository<MapLayer>> _mapLayersRepository;
 		private readonly IMapLayersDocRepository _mapLayersDocRepository;
+		private readonly Lazy<ISearchProjectionService> _searchProjections;
 
 		public MappingService(IPoiTypesRepository poiTypesRepository, IPoisRepository poisRepository, Lazy<IMongoRepository<MapLayer>> mapLayersRepository,
-			IMapLayersDocRepository mapLayersDocRepository)
+			IMapLayersDocRepository mapLayersDocRepository, Lazy<ISearchProjectionService> searchProjections = null)
 		{
+			_searchProjections = searchProjections;
 			_poiTypesRepository = poiTypesRepository;
 			_poisRepository = poisRepository;
 			_mapLayersRepository = mapLayersRepository;
@@ -27,14 +30,28 @@ namespace Resgrid.Services
 
 		public async Task<PoiType> SavePOITypeAsync(PoiType type, CancellationToken cancellationToken = default(CancellationToken))
 		{
-			return await _poiTypesRepository.SaveOrUpdateAsync(type, cancellationToken);
+			var saved = await _poiTypesRepository.SaveOrUpdateAsync(type, cancellationToken);
 
+			// Each POI's projection carries its type name; a renamed type re-projects them.
+			if (_searchProjections != null && saved != null && type != null && type.PoiTypeId > 0)
+			{
+				var stored = await _poiTypesRepository.GetPoiTypeByTypeIdAsync(saved.PoiTypeId);
+				foreach (var poi in stored?.Pois ?? Enumerable.Empty<Poi>())
+				{
+					poi.Type = stored;
+					await _searchProjections.Value.ProjectPoiAsync(poi, cancellationToken);
+				}
+			}
+
+			return saved;
 		}
 
 		public async Task<Poi> SavePOIAsync(Poi poi, CancellationToken cancellationToken = default(CancellationToken))
 		{
-			return await _poisRepository.SaveOrUpdateAsync(poi, cancellationToken);
-
+			var saved = await _poisRepository.SaveOrUpdateAsync(poi, cancellationToken);
+			if (_searchProjections != null && saved != null)
+				await _searchProjections.Value.ProjectPoiAsync(saved, cancellationToken);
+			return saved;
 		}
 
 		public async Task<List<PoiType>> GetPOITypesForDepartmentAsync(int departmentId)
@@ -105,7 +122,11 @@ namespace Resgrid.Services
 
 			if (type != null)
 			{
-				return await _poiTypesRepository.DeleteAsync(type, cancellationToken);
+				var deleted = await _poiTypesRepository.DeleteAsync(type, cancellationToken);
+				if (deleted && _searchProjections != null)
+					foreach (var poi in type.Pois ?? Enumerable.Empty<Poi>())
+						await _searchProjections.Value.RemoveAsync(type.DepartmentId, SearchEntityTypes.Poi, poi.PoiId.ToString(), cancellationToken);
+				return deleted;
 			}
 
 			return false;
@@ -117,7 +138,11 @@ namespace Resgrid.Services
 
 			if (poi != null)
 			{
-				return await _poisRepository.DeleteAsync(poi, cancellationToken);
+				var type = _searchProjections != null ? await GetTypeByIdAsync(poi.PoiTypeId) : null;
+				var deleted = await _poisRepository.DeleteAsync(poi, cancellationToken);
+				if (deleted && type != null)
+					await _searchProjections.Value.RemoveAsync(type.DepartmentId, SearchEntityTypes.Poi, poi.PoiId.ToString(), cancellationToken);
+				return deleted;
 			}
 
 			return false;
@@ -155,9 +180,20 @@ namespace Resgrid.Services
 			}
 			else
 			{
-				var layers = await _mapLayersRepository.Value.FilterByAsync(filter => filter.DepartmentId == departmentId && filter.Type == (int)type && filter.IsDeleted == false);
+				// Layers are an optional overlay on every map page. An unreachable or misconfigured Mongo (common on
+				// self-hosted installs) must not take the whole map down with it (GitHub #243): log it and draw the
+				// map without layers.
+				try
+				{
+					var layers = await _mapLayersRepository.Value.FilterByAsync(filter => filter.DepartmentId == departmentId && filter.Type == (int)type && filter.IsDeleted == false);
 
-				return layers.ToList();
+					return layers.ToList();
+				}
+				catch (Exception ex)
+				{
+					Framework.Logging.LogException(ex, $"Unable to read map layers for department {departmentId} from the document database.");
+					return new List<MapLayer>();
+				}
 			}
 		}
 

@@ -29,5 +29,11 @@ namespace Resgrid.Model.Providers
 		/// </summary>
 		void RegisterForChatEvents(Func<int, string, Task> chatEvent);
 		void RegisterForChecklistEvents(Func<int, string, Task> checklistEvent);
+
+		/// <summary>Events for one session (session id, serialized <c>SessionEventMessage</c>).</summary>
+		void RegisterForSessionEvents(Func<string, string, Task> sessionEvent);
+
+		/// <summary>Unit status timer acknowledgement changes (department id, unit id).</summary>
+		void RegisterForUnitStatusAlertEvents(Func<int, string, Task> unitStatusAlertEvent);
 	}
 }

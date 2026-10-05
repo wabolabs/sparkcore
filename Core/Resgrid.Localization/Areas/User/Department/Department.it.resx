@@ -59,15 +59,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-  <data name="Name1" xml:space="preserve">
-    <value>this is my long string</value>
-  </data>
-  <data name="Bitmap1" xml:space="preserve">
-    <value>[base64 mime encoded serialized .NET Framework object]</value>
-  </data>
-  <data name="Icon1" xml:space="preserve">
-    <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-  </data>
   <data name="DeleteDepartmentSettingsInfo" xml:space="preserve">
     <value>Request deletion of your department. This is a permanent and non-reversable operation that takes 25 days to complete and needs to run after hours. During the wait period you can cancel the request if you choose.</value>
   </data>
@@ -423,7 +414,7 @@
     <value>Inventario</value>
   </data>
   <data name="DisabledLogsLabel" xml:space="preserve">
-    <value>Registri</value>
+    <value>Log</value>
   </data>
   <data name="DisabledMaintenanceLabel" xml:space="preserve">
     <value>Maintenance</value>
@@ -884,6 +875,9 @@
   <data name="RunCardSavedMessage" xml:space="preserve">
     <value>Scheda salvata.</value>
   </data>
+  <data name="RunCardDetachedReferencesRemoved" xml:space="preserve">
+    <value>{0} elemento/i di questa scheda di intervento facevano riferimento a tipi di unità, ruoli, tipi di chiamata, stazioni o stati nel frattempo eliminati e sono stati rimossi. Controlla la scheda e salvala per mantenere la modifica.</value>
+  </data>
   <data name="CallPriority" xml:space="preserve">
     <value>Priorità chiamata</value>
   </data>
@@ -1005,7 +999,7 @@
     <value>Profilo del dipartimento</value>
   </data>
   <data name="ProfileIntro" xml:space="preserve">
-    <value>Questa è l'identità che Resgrid stampa sui rapporti, mostra nelle e-mail personalizzate e usa ovunque il dipartimento si presenti. Lasciate un campo vuoto per ricorrere alle impostazioni del dipartimento.</value>
+    <value>Questa è l'identità che Resgrid stampa sui registri, mostra nelle e-mail personalizzate e usa ovunque il dipartimento si presenti. Lasciate un campo vuoto per ricorrere alle impostazioni del dipartimento.</value>
   </data>
   <data name="ProfileIdentity" xml:space="preserve">
     <value>Identità</value>
@@ -1032,7 +1026,7 @@
     <value>Indirizzo</value>
   </data>
   <data name="ProfileAddressNote" xml:space="preserve">
-    <value>L'indirizzo stampato su rapporti ed e-mail è quello del dipartimento:</value>
+    <value>L'indirizzo stampato su registri ed e-mail è quello del dipartimento:</value>
   </data>
   <data name="ProfileSocial" xml:space="preserve">
     <value>Social</value>
@@ -1111,5 +1105,170 @@
   </data>
   <data name="GroupDispatchScopeNoRoles" xml:space="preserve">
     <value>Non sono ancora definiti ruoli del personale.</value>
+  </data>
+  <data name="UnitCallDispatchStatusLabel" xml:space="preserve">
+    <value>Stato dell'unità all'invio della chiamata</value>
+  </data>
+  <data name="UnitCallReleaseStatusLabel" xml:space="preserve">
+    <value>Stato dell'unità al rilascio dalla chiamata</value>
+  </data>
+  <data name="UnitDefaultStatusesHelp" xml:space="preserve">
+    <value>Questi stati predefiniti delle unità usano solo i tipi di stato integrati. Usa la tabella di sovrascrittura per tipo di unità qui sotto quando un tipo di unità ha bisogno di uno dei propri stati personalizzati.</value>
+  </data>
+  <data name="UnitTypeStatusOverridesHeader" xml:space="preserve">
+    <value>Sovrascritture di stato per tipo di unità</value>
+  </data>
+  <data name="UnitTypeStatusOverridesHelp" xml:space="preserve">
+    <value>Qui compaiono solo i tipi di unità con stati personalizzati. Lascia il valore su Predefinito per usare lo stato integrato valido per tutto il dipartimento indicato sopra.</value>
+  </data>
+  <data name="CheckInTimerActiveStatesLabel" xml:space="preserve">
+    <value>Stati attivi</value>
+  </data>
+  <data name="CheckInTimerLeaveEmptyForAllStates" xml:space="preserve">
+    <value>Lascia vuoto per "Tutti gli stati".</value>
+  </data>
+  <data name="CheckInTimerAllStates" xml:space="preserve">
+    <value>Tutti</value>
+  </data>
+  <data name="TtsLanguage" xml:space="preserve">
+    <value>Lingua TTS</value>
+  </data>
+  <data name="TtsLanguageHelp" xml:space="preserve">
+    <value>Seleziona la lingua o il dialetto eSpeak-NG da usare per i messaggi vocali di questo dipartimento.</value>
+  </data>
+  <data name="RequirePasswordResetViaEmail" xml:space="preserve">
+    <value>Richiedi il ripristino della password tramite e-mail</value>
+  </data>
+  <data name="RequirePasswordResetViaEmailHelp" xml:space="preserve">
+    <value>Impedisce agli amministratori del dipartimento e dei gruppi di scegliere o vedere la nuova password di un membro. Le azioni di ripristino inviano invece al membro un link via e-mail monouso e di breve durata. Le sessioni esistenti vengono chiuse dopo che il membro ha cambiato la password.</value>
+  </data>
+  <data name="MapStyleHeader" xml:space="preserve">
+    <value>Stile mappa</value>
+  </data>
+  <data name="MapStyleHelp" xml:space="preserve">
+    <value>La mappa di base che il tuo dipartimento vede su ogni mappa di Resgrid: il sito web, Dispatch, Responder, Unit, IC e BigBoard.</value>
+  </data>
+  <data name="MapStyleWebsiteUnavailable" xml:space="preserve">
+    <value>Questo server Resgrid non ha un token Mapbox per il sito web, quindi le mappe del sito web mantengono la mappa standard. Lo stile scelto si applica comunque nelle app.</value>
+  </data>
+  <data name="MapStyleOverrideActive" xml:space="preserve">
+    <value>La sostituzione Mapbox del dipartimento qui sotto è attiva, quindi il sito web e le app usano quello stile personalizzato invece degli stili scelti qui.</value>
+  </data>
+  <data name="MapStyleDayLabel" xml:space="preserve">
+    <value>Stile mappa diurno</value>
+  </data>
+  <data name="MapStyleDayHelp" xml:space="preserve">
+    <value>Usato sul sito web e nelle app quando il dispositivo è in modalità chiara.</value>
+  </data>
+  <data name="MapStyleNightLabel" xml:space="preserve">
+    <value>Stile mappa notturno</value>
+  </data>
+  <data name="MapStyleNightHelp" xml:space="preserve">
+    <value>Usato nelle app quando il dispositivo è in modalità scura. Automatico sceglie la versione notturna dello stile diurno.</value>
+  </data>
+  <data name="MapStyleAutomaticDay" xml:space="preserve">
+    <value>Automatico (Strade)</value>
+  </data>
+  <data name="MapStyleAutomaticNight" xml:space="preserve">
+    <value>Automatico ({0})</value>
+  </data>
+  <data name="MapStylePreviewAlt" xml:space="preserve">
+    <value>Anteprima dello stile mappa</value>
+  </data>
+  <data name="MapStyle_Streets" xml:space="preserve">
+    <value>Strade</value>
+  </data>
+  <data name="MapStyle_Outdoors" xml:space="preserve">
+    <value>Outdoor (terreno)</value>
+  </data>
+  <data name="MapStyle_Light" xml:space="preserve">
+    <value>Chiaro</value>
+  </data>
+  <data name="MapStyle_Dark" xml:space="preserve">
+    <value>Scuro</value>
+  </data>
+  <data name="MapStyle_Satellite" xml:space="preserve">
+    <value>Satellite</value>
+  </data>
+  <data name="MapStyle_SatelliteStreets" xml:space="preserve">
+    <value>Satellite con strade</value>
+  </data>
+  <data name="MapStyle_NavigationDay" xml:space="preserve">
+    <value>Navigazione giorno</value>
+  </data>
+  <data name="MapStyle_NavigationNight" xml:space="preserve">
+    <value>Navigazione notte</value>
+  </data>
+  <data name="MapStyleMapboxGroup" xml:space="preserve">
+    <value>Stili Mapbox</value>
+  </data>
+  <data name="MapStyleCommunityGroup" xml:space="preserve">
+    <value>Stili della community</value>
+  </data>
+  <data name="MapStyleCommunityHelp" xml:space="preserve">
+    <value>Gli stili della community sono mappe d'autore della galleria Mapbox; alcuni mostrano pochi dettagli stradali, quindi controlla l'anteprima prima di usarne uno per il dispatch.</value>
+  </data>
+  <data name="MapStyle_AmericanMemory" xml:space="preserve">
+    <value>American Memory</value>
+  </data>
+  <data name="MapStyle_Basic" xml:space="preserve">
+    <value>Basic</value>
+  </data>
+  <data name="MapStyle_BasicOvercast" xml:space="preserve">
+    <value>Basic Overcast</value>
+  </data>
+  <data name="MapStyle_Blueprint" xml:space="preserve">
+    <value>Blueprint</value>
+  </data>
+  <data name="MapStyle_Bubble" xml:space="preserve">
+    <value>Bubble</value>
+  </data>
+  <data name="MapStyle_CaliTerrain" xml:space="preserve">
+    <value>Cali Terrain</value>
+  </data>
+  <data name="MapStyle_Decimal" xml:space="preserve">
+    <value>Decimal</value>
+  </data>
+  <data name="MapStyle_FinlandTopo" xml:space="preserve">
+    <value>Finland Topo</value>
+  </data>
+  <data name="MapStyle_Frank" xml:space="preserve">
+    <value>Frank</value>
+  </data>
+  <data name="MapStyle_IceCream" xml:space="preserve">
+    <value>Ice Cream</value>
+  </data>
+  <data name="MapStyle_LeShine" xml:space="preserve">
+    <value>Lè Shine</value>
+  </data>
+  <data name="MapStyle_StreetsJapan" xml:space="preserve">
+    <value>Mapbox Streets Japan</value>
+  </data>
+  <data name="MapStyle_Mineral" xml:space="preserve">
+    <value>Mineral</value>
+  </data>
+  <data name="MapStyle_Minimo" xml:space="preserve">
+    <value>Minimo</value>
+  </data>
+  <data name="MapStyle_Moonlight" xml:space="preserve">
+    <value>Moonlight</value>
+  </data>
+  <data name="MapStyle_NeonGlow" xml:space="preserve">
+    <value>Neon Glow</value>
+  </data>
+  <data name="MapStyle_NorthStar" xml:space="preserve">
+    <value>North Star</value>
+  </data>
+  <data name="MapStyle_Pencil" xml:space="preserve">
+    <value>Pencil</value>
+  </data>
+  <data name="MapStyle_StandardOil" xml:space="preserve">
+    <value>Standard Oil Company</value>
+  </data>
+  <data name="MapStyle_Unicorn" xml:space="preserve">
+    <value>Unicorn</value>
+  </data>
+  <data name="RunCardTriggerRequired" xml:space="preserve">
+    <value>Aggiungi almeno un criterio di attivazione prima di salvare questa scheda di invio.</value>
   </data>
 </root>

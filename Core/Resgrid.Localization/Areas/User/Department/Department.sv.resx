@@ -59,15 +59,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-  <data name="Name1" xml:space="preserve">
-    <value>this is my long string</value>
-  </data>
-  <data name="Bitmap1" xml:space="preserve">
-    <value>[base64 mime encoded serialized .NET Framework object]</value>
-  </data>
-  <data name="Icon1" xml:space="preserve">
-    <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-  </data>
   <data name="DeleteDepartmentSettingsInfo" xml:space="preserve">
     <value>Request deletion of your department. This is a permanent and non-reversable operation that takes 25 days to complete and needs to run after hours. During the wait period you can cancel the request if you choose.</value>
   </data>
@@ -884,6 +875,9 @@
   <data name="RunCardSavedMessage" xml:space="preserve">
     <value>Larmplan sparad.</value>
   </data>
+  <data name="RunCardDetachedReferencesRemoved" xml:space="preserve">
+    <value>{0} post(er) i den här larmplanen hänvisade till enhetstyper, roller, larmtyper, stationer eller statusar som sedan dess raderats och har tagits bort. Granska larmplanen och spara den för att behålla ändringen.</value>
+  </data>
   <data name="CallPriority" xml:space="preserve">
     <value>Larmprioritet</value>
   </data>
@@ -1111,5 +1105,170 @@
   </data>
   <data name="GroupDispatchScopeNoRoles" xml:space="preserve">
     <value>Inga personalroller har definierats ännu.</value>
+  </data>
+  <data name="UnitCallDispatchStatusLabel" xml:space="preserve">
+    <value>Enhetsstatus vid utlarmning</value>
+  </data>
+  <data name="UnitCallReleaseStatusLabel" xml:space="preserve">
+    <value>Enhetsstatus vid frisläppning från larm</value>
+  </data>
+  <data name="UnitDefaultStatusesHelp" xml:space="preserve">
+    <value>Dessa standardstatusar för enheter använder endast de inbyggda typerna av enhetsstatus. Använd tabellen med åsidosättningar per enhetstyp nedan när en enhetstyp behöver en egen anpassad status.</value>
+  </data>
+  <data name="UnitTypeStatusOverridesHeader" xml:space="preserve">
+    <value>Statusåsidosättningar per enhetstyp</value>
+  </data>
+  <data name="UnitTypeStatusOverridesHelp" xml:space="preserve">
+    <value>Endast enhetstyper med anpassade enhetsstatusar visas här. Låt värdet stå på Standard för att använda den inbyggda status för hela avdelningen som anges ovan.</value>
+  </data>
+  <data name="CheckInTimerActiveStatesLabel" xml:space="preserve">
+    <value>Aktiva statusar</value>
+  </data>
+  <data name="CheckInTimerLeaveEmptyForAllStates" xml:space="preserve">
+    <value>Lämna tomt för ”Alla statusar”.</value>
+  </data>
+  <data name="CheckInTimerAllStates" xml:space="preserve">
+    <value>Alla</value>
+  </data>
+  <data name="TtsLanguage" xml:space="preserve">
+    <value>TTS-språk</value>
+  </data>
+  <data name="TtsLanguageHelp" xml:space="preserve">
+    <value>Välj det eSpeak-NG-språk eller den dialekt som ska användas för avdelningens röstmeddelanden.</value>
+  </data>
+  <data name="RequirePasswordResetViaEmail" xml:space="preserve">
+    <value>Kräv lösenordsåterställning via e-post</value>
+  </data>
+  <data name="RequirePasswordResetViaEmailHelp" xml:space="preserve">
+    <value>Hindrar avdelnings- och gruppadministratörer från att välja eller se en medlems nya lösenord. Vid återställning skickas i stället en kortlivad engångslänk till medlemmen via e-post. Befintliga sessioner återkallas när medlemmen har bytt lösenord.</value>
+  </data>
+  <data name="MapStyleHeader" xml:space="preserve">
+    <value>Kartstil</value>
+  </data>
+  <data name="MapStyleHelp" xml:space="preserve">
+    <value>Baskartan som din avdelning ser på varje karta i Resgrid: webbplatsen, Dispatch, Responder, Unit, IC och BigBoard.</value>
+  </data>
+  <data name="MapStyleWebsiteUnavailable" xml:space="preserve">
+    <value>Den här Resgrid-servern har ingen Mapbox-token för webbplatsen, så webbplatsens kartor behåller standardkartan. Den valda stilen gäller fortfarande i apparna.</value>
+  </data>
+  <data name="MapStyleOverrideActive" xml:space="preserve">
+    <value>Avdelningens Mapbox-åsidosättning nedan är aktiverad, så webbplatsen och apparna använder den anpassade stilen i stället för stilarna som väljs här.</value>
+  </data>
+  <data name="MapStyleDayLabel" xml:space="preserve">
+    <value>Kartstil dag</value>
+  </data>
+  <data name="MapStyleDayHelp" xml:space="preserve">
+    <value>Används på webbplatsen och i apparna när enheten är i ljust läge.</value>
+  </data>
+  <data name="MapStyleNightLabel" xml:space="preserve">
+    <value>Kartstil natt</value>
+  </data>
+  <data name="MapStyleNightHelp" xml:space="preserve">
+    <value>Används i apparna när enheten är i mörkt läge. Automatiskt väljer nattversionen av dagstilen.</value>
+  </data>
+  <data name="MapStyleAutomaticDay" xml:space="preserve">
+    <value>Automatiskt (Gator)</value>
+  </data>
+  <data name="MapStyleAutomaticNight" xml:space="preserve">
+    <value>Automatiskt ({0})</value>
+  </data>
+  <data name="MapStylePreviewAlt" xml:space="preserve">
+    <value>Förhandsvisning av kartstil</value>
+  </data>
+  <data name="MapStyle_Streets" xml:space="preserve">
+    <value>Gator</value>
+  </data>
+  <data name="MapStyle_Outdoors" xml:space="preserve">
+    <value>Friluft (terräng)</value>
+  </data>
+  <data name="MapStyle_Light" xml:space="preserve">
+    <value>Ljus</value>
+  </data>
+  <data name="MapStyle_Dark" xml:space="preserve">
+    <value>Mörk</value>
+  </data>
+  <data name="MapStyle_Satellite" xml:space="preserve">
+    <value>Satellit</value>
+  </data>
+  <data name="MapStyle_SatelliteStreets" xml:space="preserve">
+    <value>Satellit med gator</value>
+  </data>
+  <data name="MapStyle_NavigationDay" xml:space="preserve">
+    <value>Navigering dag</value>
+  </data>
+  <data name="MapStyle_NavigationNight" xml:space="preserve">
+    <value>Navigering natt</value>
+  </data>
+  <data name="MapStyleMapboxGroup" xml:space="preserve">
+    <value>Mapbox-stilar</value>
+  </data>
+  <data name="MapStyleCommunityGroup" xml:space="preserve">
+    <value>Communitystilar</value>
+  </data>
+  <data name="MapStyleCommunityHelp" xml:space="preserve">
+    <value>Communitystilar är designerkartor från Mapbox-galleriet; flera visar få gatudetaljer, så kontrollera förhandsvisningen innan du använder en för utlarmning.</value>
+  </data>
+  <data name="MapStyle_AmericanMemory" xml:space="preserve">
+    <value>American Memory</value>
+  </data>
+  <data name="MapStyle_Basic" xml:space="preserve">
+    <value>Basic</value>
+  </data>
+  <data name="MapStyle_BasicOvercast" xml:space="preserve">
+    <value>Basic Overcast</value>
+  </data>
+  <data name="MapStyle_Blueprint" xml:space="preserve">
+    <value>Blueprint</value>
+  </data>
+  <data name="MapStyle_Bubble" xml:space="preserve">
+    <value>Bubble</value>
+  </data>
+  <data name="MapStyle_CaliTerrain" xml:space="preserve">
+    <value>Cali Terrain</value>
+  </data>
+  <data name="MapStyle_Decimal" xml:space="preserve">
+    <value>Decimal</value>
+  </data>
+  <data name="MapStyle_FinlandTopo" xml:space="preserve">
+    <value>Finland Topo</value>
+  </data>
+  <data name="MapStyle_Frank" xml:space="preserve">
+    <value>Frank</value>
+  </data>
+  <data name="MapStyle_IceCream" xml:space="preserve">
+    <value>Ice Cream</value>
+  </data>
+  <data name="MapStyle_LeShine" xml:space="preserve">
+    <value>Lè Shine</value>
+  </data>
+  <data name="MapStyle_StreetsJapan" xml:space="preserve">
+    <value>Mapbox Streets Japan</value>
+  </data>
+  <data name="MapStyle_Mineral" xml:space="preserve">
+    <value>Mineral</value>
+  </data>
+  <data name="MapStyle_Minimo" xml:space="preserve">
+    <value>Minimo</value>
+  </data>
+  <data name="MapStyle_Moonlight" xml:space="preserve">
+    <value>Moonlight</value>
+  </data>
+  <data name="MapStyle_NeonGlow" xml:space="preserve">
+    <value>Neon Glow</value>
+  </data>
+  <data name="MapStyle_NorthStar" xml:space="preserve">
+    <value>North Star</value>
+  </data>
+  <data name="MapStyle_Pencil" xml:space="preserve">
+    <value>Pencil</value>
+  </data>
+  <data name="MapStyle_StandardOil" xml:space="preserve">
+    <value>Standard Oil Company</value>
+  </data>
+  <data name="MapStyle_Unicorn" xml:space="preserve">
+    <value>Unicorn</value>
+  </data>
+  <data name="RunCardTriggerRequired" xml:space="preserve">
+    <value>Lägg till minst en utlösare innan du sparar detta utryckningskort.</value>
   </data>
 </root>

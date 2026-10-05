@@ -248,6 +248,7 @@
   <data name="File" xml:space="preserve"><value>ملف</value></data>
   <data name="Inactive" xml:space="preserve"><value>غير نشط</value></data>
   <data name="InvalidDestinationPoi" xml:space="preserve"><value>يرجى تحديد نقطة اهتمام صالحة للوجهة.</value></data>
+  <data name="InvalidCallCoordinates" xml:space="preserve"><value>يجب أن يكون خط العرض وخط الطول رقمين عشريين: خط العرض بين -90 و90، وخط الطول بين -180 و180.</value></data>
   <data name="LoggedOff" xml:space="preserve"><value>قام بتسجيل الخروج.</value></data>
   <data name="AttachFileRequired" xml:space="preserve"><value>يجب تحديد ملف لإرفاقه.</value></data>
   <data name="DocumentTypeNotImportable" xml:space="preserve"><value>نوع المستند ({0}) غير قابل للاستيراد.</value></data>
@@ -376,5 +377,26 @@
   </data>
   <data name="NearestUnitsNoPosition" xml:space="preserve">
     <value>لا يوجد موقع</value>
+  </data>
+  <data name="SiteInfo" xml:space="preserve">
+    <value>معلومات الموقع</value>
+  </data>
+  <data name="NoSiteInfo" xml:space="preserve">
+    <value>لا توجد جهات اتصال ذات معلومات موقع مرتبطة بهذا البلاغ.</value>
+  </data>
+  <data name="PremiseHazard" xml:space="preserve">
+    <value>خطر في المنشأة</value>
+  </data>
+  <data name="PremiseHazards" xml:space="preserve">
+    <value>مخاطر المنشأة</value>
+  </data>
+  <data name="AlertNotes" xml:space="preserve">
+    <value>ملاحظات التنبيه</value>
+  </data>
+  <data name="NoPreplan" xml:space="preserve">
+    <value>لم تُسجَّل خطة ما قبل الحادث لجهة الاتصال هذه.</value>
+  </data>
+  <data name="SiteFiles" xml:space="preserve">
+    <value>ملفات الموقع</value>
   </data>
 </root>

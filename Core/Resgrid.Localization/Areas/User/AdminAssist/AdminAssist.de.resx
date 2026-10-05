@@ -4650,6 +4650,12 @@
   <data xml:space="preserve" name="Setting.MappingUseMapboxOverride">
     <value>Mapbox-Überschreibung für Kartierung verwenden</value>
   </data>
+  <data xml:space="preserve" name="Setting.MappingMapStyle">
+    <value>Kartenstil</value>
+  </data>
+  <data xml:space="preserve" name="Setting.MappingMapStyleNight">
+    <value>Kartenstil Nacht</value>
+  </data>
   <data xml:space="preserve" name="Setting.ModuleSettings">
     <value>Moduleinstellungen</value>
   </data>
@@ -4685,6 +4691,9 @@
   </data>
   <data xml:space="preserve" name="Setting.RecordsRetentionPolicy">
     <value>Aufbewahrungsrichtlinie für Datensätze</value>
+  </data>
+  <data xml:space="preserve" name="Setting.RecordsNerisWorkflowsEnabled">
+    <value>NERIS-Abläufe für Datensätze aktiviert</value>
   </data>
   <data xml:space="preserve" name="Setting.RecordsReviewDueHours">
     <value>Fälligkeitsfrist der Datensatzprüfung (Stunden)</value>
@@ -4869,6 +4878,12 @@
   <data xml:space="preserve" name="SettingHelp.MappingUseMapboxOverride">
     <value>Verwendet die Kartenanbieter-Überschreibung der Abteilung. Das Deaktivieren auf der zuständigen Seite entfernt den gespeicherten Stil und das Token.</value>
   </data>
+  <data xml:space="preserve" name="SettingHelp.MappingMapStyle">
+    <value>Mapbox-Grundkarte, die jede Karte der Abteilung im hellen Modus zeigt, auf der Website und in allen Apps. Automatisch ist Straßen; die Website benötigt ein Mapbox-Token des Servers, und die Mapbox-Überschreibung der Abteilung ersetzt den Stil überall.</value>
+  </data>
+  <data xml:space="preserve" name="SettingHelp.MappingMapStyleNight">
+    <value>Grundkarte, die die Apps im dunklen Modus zeigen. Automatisch passt zum Tagesstil (Dunkel für Straßenkarten, Navigation Nacht für Navigation Tag; Outdoor und Satellit unverändert). Die Website verwendet immer den Tagesstil.</value>
+  </data>
   <data xml:space="preserve" name="SettingHelp.ModuleSettings">
     <value>Steuert die Modulnavigation und unterstützte Funktionsschalter. Das Ausblenden eines Moduls löscht weder dessen Datensätze noch belegt es, dass unabhängige Dispositionseinstellungen deaktiviert sind.</value>
   </data>
@@ -4904,6 +4919,9 @@
   </data>
   <data xml:space="preserve" name="SettingHelp.RecordsRetentionPolicy">
     <value>Standard- und definitionsspezifische Aufbewahrung, einschließlich früherer Richtlinienverläufe. Sperren und Regeln für eingeschränkte Klassen können die Löschberechtigung verhindern.</value>
+  </data>
+  <data xml:space="preserve" name="SettingHelp.RecordsNerisWorkflowsEnabled">
+    <value>Schaltet die NERIS-Prüfung, -Übermittlung und die NERIS-Einrichtungsseiten dieser Abteilung ein oder aus. Andere Datensatz-Einstellungen, Datensätze und Verläufe bleiben unverändert; das NERIS-Profil und wartende Übermittlungen bleiben für die Wiederaktivierung erhalten.</value>
   </data>
   <data xml:space="preserve" name="SettingHelp.RecordsReviewDueHours">
     <value>Standardfrist für die administrative Prüfung; eine Überschreibung auf Definitionsebene hat Vorrang. Dies ist keine gesetzliche Fristableitung.</value>
@@ -5190,6 +5208,27 @@
   <data xml:space="preserve" name="TableField.DepartmentNotification.UsersToNotify">
     <value>Abteilungsbenachrichtigung / Zu benachrichtigende Mitglieder</value>
   </data>
+  <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.AcceptRecentLoginMfaForAdp">
+    <value>Sicherheitsrichtlinie der Abteilung / Aktuelle Anmelde-MFA für ADP akzeptieren</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.AcceptRecentUnlockMfaForAdp">
+    <value>Sicherheitsrichtlinie der Abteilung / Aktuelle Entsperr-MFA für ADP akzeptieren</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.AllowFederatedMfaForAdp">
+    <value>Sicherheitsrichtlinie der Abteilung / Föderierte MFA für ADP zulassen</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.AllowFederatedMfaForLoginMfa">
+    <value>Sicherheitsrichtlinie der Abteilung / Föderierte MFA für Anmelde-MFA zulassen</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.AllowPasskeysForAdp">
+    <value>Sicherheitsrichtlinie der Abteilung / Passkeys für ADP zulassen</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.AllowPasskeysForLoginMfa">
+    <value>Sicherheitsrichtlinie der Abteilung / Passkeys für Anmelde-MFA zulassen</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.AllowResponderApproval">
+    <value>Sicherheitsrichtlinie der Abteilung / Responder-Freigabe zulassen</value>
+  </data>
   <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.AllowedIpRanges">
     <value>Sicherheitsrichtlinie der Abteilung / Zulässige IP-Bereiche</value>
   </data>
@@ -5216,6 +5255,15 @@
   </data>
   <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.SessionTimeoutMinutes">
     <value>Sicherheitsrichtlinie der Abteilung / Sitzungs-Timeout (Minuten)</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.SharedIdleLockMinutes">
+    <value>Sicherheitsrichtlinie der Abteilung / Minuten Inaktivität bis zur Sperre gemeinsam genutzter Sitzungen</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.SharedModeRequiredApps">
+    <value>Sicherheitsrichtlinie der Abteilung / Apps mit erzwungenem gemeinsamem Modus</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSecurityPolicy.SharedShiftHours">
+    <value>Sicherheitsrichtlinie der Abteilung / Schichtdauer gemeinsam genutzter Sitzungen (Stunden)</value>
   </data>
   <data xml:space="preserve" name="TableField.DepartmentSsoConfig.AllowLocalLogin">
     <value>SSO-Konfiguration der Abteilung / Lokale Anmeldung zulassen</value>
@@ -5252,6 +5300,12 @@
   </data>
   <data xml:space="preserve" name="TableField.DepartmentSsoConfig.EntityId">
     <value>SSO-Konfiguration der Abteilung / Entitäts-ID</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSsoConfig.FederatedMfaMappingJson">
+    <value>SSO-Konfiguration der Abteilung / Zuordnung für föderierte MFA (JSON)</value>
+  </data>
+  <data xml:space="preserve" name="TableField.DepartmentSsoConfig.IdpSsoUrl">
+    <value>SSO-Konfiguration der Abteilung / SSO-URL des IdP</value>
   </data>
   <data xml:space="preserve" name="TableField.DepartmentSsoConfig.IsEnabled">
     <value>SSO-Konfiguration der Abteilung / Aktiviert</value>
@@ -5427,6 +5481,27 @@
   <data xml:space="preserve" name="TableHelp.DepartmentNotification.UsersToNotify">
     <value>Ausdrückliche Mitgliederempfänger. Mitgliedschaft und Kanalberechtigung werden zum Sendezeitpunkt gesondert bewertet.</value>
   </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.AcceptRecentLoginMfaForAdp">
+    <value>Erlaubt, dass die bei der Anmeldung in derselben Sitzung abgeschlossene MFA geschützte Daten innerhalb des Step-up-Zeitfensters öffnet, für Methoden, die die Einstellungen für geschützte Daten zulassen. Eine Änderung beendet den aktuellen Zugriff auf geschützte Daten. Nur für das verwaltende Mitglied.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.AcceptRecentUnlockMfaForAdp">
+    <value>Erlaubt, dass die frische Entsperrbestätigung der bedienenden Person auf einem gemeinsam genutzten Gerät geschützte Daten öffnet. Eine Änderung beendet den aktuellen Zugriff auf geschützte Daten. Nur für das verwaltende Mitglied.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.AllowFederatedMfaForAdp">
+    <value>Akzeptiert die MFA des Identitätsanbieters für geschützte Daten. Erfordert eine getestete MFA-Zuordnung; eine Änderung beendet den aktuellen Zugriff auf geschützte Daten. Nur für das verwaltende Mitglied.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.AllowFederatedMfaForLoginMfa">
+    <value>Akzeptiert die MFA des Identitätsanbieters für Anmeldung und Step-up. Erfordert eine getestete MFA-Zuordnung in der SSO-Konfiguration; ohne sie zählen die Angaben des Anbieters nie. Nur für das verwaltende Mitglied.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.AllowPasskeysForAdp">
+    <value>Akzeptiert einen Passkey für den Zugriff auf geschützte Daten, die ADP-Verwaltung und Freigaben geschützter Workflows. Authenticator-Codes werden immer akzeptiert. Eine Änderung beendet den aktuellen Zugriff auf geschützte Daten, sodass Mitglieder sich erneut bestätigen. Nur für das verwaltende Mitglied.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.AllowPasskeysForLoginMfa">
+    <value>Akzeptiert einen in der anfragenden App registrierten Passkey als MFA für Anmeldung, Abteilungswechsel und Step-up. Authenticator-Codes werden immer akzeptiert. Eine Änderung erhöht die MFA-Richtlinienversion; Sitzungen, deren einziger zweiter Faktor nun nicht mehr zulässig ist, bestätigen sich erneut. Nur für das verwaltende Mitglied.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.AllowResponderApproval">
+    <value>Akzeptiert die Freigabe mit dem Passkey der Responder-App des Mitglieds, wo die passende Passkey-Einstellung aktiv ist; nie für Sicherheitsänderungen oder Anmeldemethoden des Kontos. Eine Änderung beendet auch den aktuellen Zugriff auf geschützte Daten. Nur für das verwaltende Mitglied.</value>
+  </data>
   <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.AllowedIpRanges">
     <value>Zulässige Netzwerkbereiche für die Anmeldung. Leer bedeutet keine Bereichseinschränkung. Prüfen Sie legitime Einsatzkräfte-Netzwerke und den Wiederherstellungszugriff, bevor Sie dies einschränken.</value>
   </data>
@@ -5453,6 +5528,15 @@
   </data>
   <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.SessionTimeoutMinutes">
     <value>Leerlauf-Timeout in Minuten; null überlässt dies dem Host-Verhalten. Verifizieren Sie richtliniengesteuerte Sitzungen und jeden unterstützten Client, statt eine sofortige globale Abmeldung anzunehmen.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.SharedIdleLockMinutes">
+    <value>Minuten ohne Aktivität der bedienenden Person, bevor die Sitzung eines gemeinsam genutzten Fahrzeugtablets oder Arbeitsplatzes gesperrt wird, von 1 bis 15. Hintergrundaktualisierungen und eingehende Alarme gelten nicht als Aktivität. Ein strengerer Wert gilt für laufende Sitzungen bei ihrer nächsten Anfrage. Nur für das verwaltende Mitglied.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.SharedModeRequiredApps">
+    <value>Unit-, IC- und Dispatch-Sitzungen, die diese Abteilung immer als gemeinsam genutzte Sitzungen führt, unabhängig von der Einstellung der Installation; Anmeldungen, die ihre App nicht nennen, zählen ebenfalls. Erfordert App-Versionen, die den gemeinsamen Modus unterstützen. Nur für das verwaltende Mitglied.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSecurityPolicy.SharedShiftHours">
+    <value>Stunden nach der Anmeldung, nach denen eine gemeinsam genutzte Sitzung unabhängig von der Aktivität endet, von 1 bis 24. Ein kürzerer Wert beendet laufende Sitzungen früher; ein längerer verlängert sie nie. Nur für das verwaltende Mitglied.</value>
   </data>
   <data xml:space="preserve" name="TableHelp.DepartmentSsoConfig.AllowLocalLogin">
     <value>Erlaubt einen lokalen Passwortweg neben diesem Anbieter, sofern die Richtlinie dies zulässt. Prüfen Sie die abteilungsweite SSO-Anforderung und den Wiederherstellungsplan gemeinsam.</value>
@@ -5489,6 +5573,12 @@
   </data>
   <data xml:space="preserve" name="TableHelp.DepartmentSsoConfig.EntityId">
     <value>Beim Identitätsanbieter registrierte SAML-Dienstanbieter-Kennung. Sie muss mit der konfigurierten Integration übereinstimmen.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSsoConfig.FederatedMfaMappingJson">
+    <value>Welche Anmeldeergebnisse des Anbieters bei der Anbieter-Step-up-Prüfung als MFA gelten. Nach einer Änderung der Zuordnung, des Ausstellers oder des Clients ist ein neuer erfolgreicher Test nötig, bevor Anbieter-MFA wieder akzeptiert wird.</value>
+  </data>
+  <data xml:space="preserve" name="TableHelp.DepartmentSsoConfig.IdpSsoUrl">
+    <value>SAML-Anmeldeadresse des Anbieters, an die eine in Resgrid gestartete Anmeldung ihre Anfrage sendet. Prüfen Sie sie anhand der Anbietermetadaten, bevor Sie sich darauf verlassen.</value>
   </data>
   <data xml:space="preserve" name="TableHelp.DepartmentSsoConfig.IsEnabled">
     <value>Macht diese Anbieterkonfiguration für den unterstützten SSO-Ablauf verfügbar. Ein gespeichertes Aktivierungskennzeichen ist kein erfolgreicher Anmeldetest.</value>

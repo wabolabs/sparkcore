@@ -30,8 +30,23 @@ namespace Resgrid.Model.Search
 		public const string ServiceContract = "ServiceContract";
 		public const string Deployment = "Deployment";
 		public const string CertificationType = "CertificationType";
+		// Operations reference families (plan R3 Tier 2): names, codes and descriptions; legacy logs carry their narrative
+		// under the same protection rule as call notes.
+		public const string Protocol = "Protocol";
+		public const string Training = "Training";
+		public const string CalendarEvent = "CalendarEvent";
+		public const string Log = "Log";
+		public const string Poi = "Poi";
+		public const string Shift = "Shift";
+		public const string Group = "Group";
+		// RMS occupancy master (pre-plans): name, number, address and the alarm company, under the Records gates.
+		public const string Occupancy = "Occupancy";
 
-		public static readonly IReadOnlyList<string> Indexed = new[] { Call, Unit, Personnel, Contact, Message, Document, Note, Invoice, RateCard, Bid, ServiceContract, Deployment, CertificationType };
+		public static readonly IReadOnlyList<string> Indexed = new[]
+		{
+			Call, Unit, Personnel, Contact, Message, Document, Note, Invoice, RateCard, Bid, ServiceContract, Deployment, CertificationType,
+			Protocol, Training, CalendarEvent, Log, Poi, Shift, Group, Occupancy
+		};
 	}
 
 	/// <summary>Index state values stored on SearchIndexState.State (same numbering as the RMS records index).</summary>
@@ -50,8 +65,8 @@ namespace Resgrid.Model.Search
 	/// </summary>
 	public static class GlobalSearchGeneration
 	{
-		/// <summary>Bump when GlobalSearchDocumentBuilder or the projection allowlist changes.</summary>
-		public const int SchemaVersion = 2;
+		/// <summary>Bump when GlobalSearchDocumentBuilder or the projection allowlist changes. 3: call notes in the call full text.</summary>
+		public const int SchemaVersion = 3;
 
 		public static string Compute(int protectedCatalogVersion, long policyEpoch)
 		{
@@ -99,6 +114,24 @@ namespace Resgrid.Model.Search
 		}
 
 		public string IndexName { get; }
+	}
+
+	/// <summary>
+	/// A file named by a manifest is not in the object store. Normally the writer pruned it after publishing a newer
+	/// manifest while a reader was still pulling the older one; the reader re-reads the manifest and starts over.
+	/// </summary>
+	public class SearchIndexObjectNotFoundException : Exception
+	{
+		public SearchIndexObjectNotFoundException(string indexName, string fileName, string message, Exception innerException = null)
+			: base(message, innerException)
+		{
+			IndexName = indexName;
+			FileName = fileName;
+		}
+
+		public string IndexName { get; }
+
+		public string FileName { get; }
 	}
 
 	/// <summary>Outcome of one maintenance sweep of the global index (worker 70).</summary>

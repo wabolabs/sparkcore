@@ -2,6 +2,7 @@
 @using Resgrid.Web.Areas.User.Models.Records
 @model RecordOccupancyDetailsView
 @inject IStringLocalizer<Resgrid.Localization.Areas.User.Records.Records> L
+@inject IStringLocalizer<Resgrid.Localization.Areas.User.Dispatch.LocationHistory> historyLocalizer
 @{
     var departmentTime = DepartmentTime.From(ViewData);
 	var o = Model.Occupancy;
@@ -217,12 +218,12 @@
 			@if (Model.CanAdminister && o.Status != (int)RmsOccupancyStatus.Merged)
 			{
 				<div class="ibox"><div class="ibox-title"><h5>@L["Actions"]</h5></div><div class="ibox-content">
-					<form method="post" class="form-inline" asp-controller="RecordOccupancies" asp-action="Merge" asp-route-area="User" onsubmit="return confirm('@L["MergeConfirm"]');">
+					<form method="post" class="form-inline" asp-controller="RecordOccupancies" asp-action="Merge" asp-route-area="User" onsubmit="return confirm('@JsEncoder.Encode(L["MergeConfirm"])');">
 						@Html.AntiForgeryToken()<input type="hidden" name="id" value="@o.RmsOccupancyId" />
 						<input class="form-control" name="targetOccupancyId" placeholder="@L["MergeTargetId"]" maxlength="36" required />
 						<button class="btn btn-sm btn-warning"><i class="fa fa-compress"></i> @L["MergeInto"]</button>
 					</form>
-					<form method="post" class="m-t-sm" asp-controller="RecordOccupancies" asp-action="Delete" asp-route-area="User" onsubmit="return confirm('@L["DeleteOccupancyConfirm"]');">
+					<form method="post" class="m-t-sm" asp-controller="RecordOccupancies" asp-action="Delete" asp-route-area="User" onsubmit="return confirm('@JsEncoder.Encode(L["DeleteOccupancyConfirm"])');">
 						@Html.AntiForgeryToken()<input type="hidden" name="id" value="@o.RmsOccupancyId" />
 						<button class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> @L["DeleteOccupancy"]</button>
 					</form>
@@ -230,4 +231,26 @@
 			}
 		</div>
 	</div>
+	<div class="row" id="responseHistory">
+		<div class="col-md-12">
+			<div class="ibox"><div class="ibox-content">
+				@{
+					var responseHistoryPanel = new Resgrid.Web.Areas.User.Models.Calls.CallLocationHistoryPanel
+					{
+						Id = "occupancyResponseHistory",
+						Url = Url.Action("CallHistory", "RecordOccupancies", new { area = "User", id = o.RmsOccupancyId }),
+						Header = historyLocalizer["ResponseHistoryHeader"].Value,
+						Help = historyLocalizer["ResponseHistoryHelp"].Value,
+						AutoLoad = true
+					};
+				}
+				<partial name="_CallLocationHistory" model="responseHistoryPanel" />
+			</div></div>
+		</div>
+	</div>
 </div>
+
+@section Scripts
+{
+	<script src="~/js/app/internal/dispatch/resgrid.dispatch.locationhistory.js" asp-append-version="true" type="text/javascript"></script>
+}
