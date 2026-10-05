@@ -83,4 +83,31 @@
   <data name="ScheduledCallsHeader" xml:space="preserve">
     <value>Schemalagda larm</value>
   </data>
+  <data name="NowRespondingHeader" xml:space="preserve">
+    <value>Svarar nu</value>
+  </data>
+  <data name="NowRespondingNone" xml:space="preserve">
+    <value>Ingen svarar på aktiva larm.</value>
+  </data>
+  <data name="NowRespondingPersonnel" xml:space="preserve">
+    <value>Personal</value>
+  </data>
+  <data name="NowRespondingUnits" xml:space="preserve">
+    <value>Enheter</value>
+  </data>
+  <data name="NowRespondingArrived" xml:space="preserve">
+    <value>Första ankomst</value>
+  </data>
+  <data name="NowRespondingEta" xml:space="preserve">
+    <value>Beräknad ankomst</value>
+  </data>
+  <data name="ApparatusHeader" xml:space="preserve">
+    <value>Fordon</value>
+  </data>
+  <data name="WeatherHeader" xml:space="preserve">
+    <value>Väder</value>
+  </data>
+  <data name="EventsHeader" xml:space="preserve">
+    <value>Händelser</value>
+  </data>
 </root>

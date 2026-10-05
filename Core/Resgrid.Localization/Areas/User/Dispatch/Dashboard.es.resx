@@ -141,4 +141,31 @@
   <data name="ScheduledCallsHeader" xml:space="preserve">
     <value>Llamadas programadas</value>
   </data>
+  <data name="NowRespondingHeader" xml:space="preserve">
+    <value>Respondiendo ahora</value>
+  </data>
+  <data name="NowRespondingNone" xml:space="preserve">
+    <value>Nadie está respondiendo a llamadas activas.</value>
+  </data>
+  <data name="NowRespondingPersonnel" xml:space="preserve">
+    <value>Personal</value>
+  </data>
+  <data name="NowRespondingUnits" xml:space="preserve">
+    <value>Unidades</value>
+  </data>
+  <data name="NowRespondingArrived" xml:space="preserve">
+    <value>Primera llegada</value>
+  </data>
+  <data name="NowRespondingEta" xml:space="preserve">
+    <value>Llegada est.</value>
+  </data>
+  <data name="ApparatusHeader" xml:space="preserve">
+    <value>Vehículos</value>
+  </data>
+  <data name="WeatherHeader" xml:space="preserve">
+    <value>Clima</value>
+  </data>
+  <data name="EventsHeader" xml:space="preserve">
+    <value>Eventos</value>
+  </data>
 </root>

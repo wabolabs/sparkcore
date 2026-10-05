@@ -87,4 +87,31 @@
   <data name="ScheduledCallsHeader" xml:space="preserve">
     <value>البلاغات المجدولة</value>
   </data>
+  <data name="NowRespondingHeader" xml:space="preserve">
+    <value>يستجيب الآن</value>
+  </data>
+  <data name="NowRespondingNone" xml:space="preserve">
+    <value>لا أحد يستجيب للنداءات النشطة.</value>
+  </data>
+  <data name="NowRespondingPersonnel" xml:space="preserve">
+    <value>الأفراد</value>
+  </data>
+  <data name="NowRespondingUnits" xml:space="preserve">
+    <value>الوحدات</value>
+  </data>
+  <data name="NowRespondingArrived" xml:space="preserve">
+    <value>أول وصول</value>
+  </data>
+  <data name="NowRespondingEta" xml:space="preserve">
+    <value>وقت الوصول المتوقع</value>
+  </data>
+  <data name="ApparatusHeader" xml:space="preserve">
+    <value>المركبات</value>
+  </data>
+  <data name="WeatherHeader" xml:space="preserve">
+    <value>الطقس</value>
+  </data>
+  <data name="EventsHeader" xml:space="preserve">
+    <value>الأحداث</value>
+  </data>
 </root>

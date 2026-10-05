@@ -83,4 +83,31 @@
   <data name="ScheduledCallsHeader" xml:space="preserve">
     <value>Geplante Einsätze</value>
   </data>
+  <data name="NowRespondingHeader" xml:space="preserve">
+    <value>Aktuell ausrückend</value>
+  </data>
+  <data name="NowRespondingNone" xml:space="preserve">
+    <value>Niemand rückt zu aktiven Einsätzen aus.</value>
+  </data>
+  <data name="NowRespondingPersonnel" xml:space="preserve">
+    <value>Personal</value>
+  </data>
+  <data name="NowRespondingUnits" xml:space="preserve">
+    <value>Einheiten</value>
+  </data>
+  <data name="NowRespondingArrived" xml:space="preserve">
+    <value>Erstes Eintreffen</value>
+  </data>
+  <data name="NowRespondingEta" xml:space="preserve">
+    <value>Voraussichtl. Ankunft</value>
+  </data>
+  <data name="ApparatusHeader" xml:space="preserve">
+    <value>Fahrzeuge</value>
+  </data>
+  <data name="WeatherHeader" xml:space="preserve">
+    <value>Wetter</value>
+  </data>
+  <data name="EventsHeader" xml:space="preserve">
+    <value>Termine</value>
+  </data>
 </root>

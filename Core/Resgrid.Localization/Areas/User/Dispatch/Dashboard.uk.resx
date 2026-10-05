@@ -83,4 +83,31 @@
   <data name="ScheduledCallsHeader" xml:space="preserve">
     <value>Заплановані виклики</value>
   </data>
+  <data name="NowRespondingHeader" xml:space="preserve">
+    <value>Зараз реагують</value>
+  </data>
+  <data name="NowRespondingNone" xml:space="preserve">
+    <value>Ніхто не реагує на активні виклики.</value>
+  </data>
+  <data name="NowRespondingPersonnel" xml:space="preserve">
+    <value>Персонал</value>
+  </data>
+  <data name="NowRespondingUnits" xml:space="preserve">
+    <value>Підрозділи</value>
+  </data>
+  <data name="NowRespondingArrived" xml:space="preserve">
+    <value>Перше прибуття</value>
+  </data>
+  <data name="NowRespondingEta" xml:space="preserve">
+    <value>Очік. прибуття</value>
+  </data>
+  <data name="ApparatusHeader" xml:space="preserve">
+    <value>Техніка</value>
+  </data>
+  <data name="WeatherHeader" xml:space="preserve">
+    <value>Погода</value>
+  </data>
+  <data name="EventsHeader" xml:space="preserve">
+    <value>Події</value>
+  </data>
 </root>
