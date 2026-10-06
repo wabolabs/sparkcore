@@ -25,19 +25,25 @@ namespace Resgrid.Web.Tts.Health
 		{
 			var validationErrors = new List<string>();
 
-			if (string.IsNullOrWhiteSpace(_s3Options.AccessKey))
+			// SparkOps fork: a filesystem-storage deployment has no S3 to configure
+			// (see ServiceCollectionExtensions.AddTtsConfiguration), so requiring it
+			// here reported a working service as unhealthy forever.
+			if (!string.Equals(TtsConfig.StorageMode, "filesystem", StringComparison.OrdinalIgnoreCase))
 			{
-				validationErrors.Add("S3 access key is not configured.");
-			}
+				if (string.IsNullOrWhiteSpace(_s3Options.AccessKey))
+				{
+					validationErrors.Add("S3 access key is not configured.");
+				}
 
-			if (string.IsNullOrWhiteSpace(_s3Options.SecretKey))
-			{
-				validationErrors.Add("S3 secret key is not configured.");
-			}
+				if (string.IsNullOrWhiteSpace(_s3Options.SecretKey))
+				{
+					validationErrors.Add("S3 secret key is not configured.");
+				}
 
-			if (string.IsNullOrWhiteSpace(_s3Options.Bucket))
-			{
-				validationErrors.Add("S3 bucket is not configured.");
+				if (string.IsNullOrWhiteSpace(_s3Options.Bucket))
+				{
+					validationErrors.Add("S3 bucket is not configured.");
+				}
 			}
 
 			if (string.IsNullOrWhiteSpace(_ttsOptions.PiperExecutable))
